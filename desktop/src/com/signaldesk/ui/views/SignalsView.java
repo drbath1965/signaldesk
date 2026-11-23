@@ -5,6 +5,7 @@ import com.signaldesk.model.SignalParams;
 import com.signaldesk.signals.*;
 import com.signaldesk.store.PriceDownloader;
 import com.signaldesk.store.PriceStore;
+import com.signaldesk.store.UiPrefs;
 import com.signaldesk.ui.*;
 import com.signaldesk.ui.EditTable.Col;
 import com.signaldesk.ui.PriceService;
@@ -19,7 +20,12 @@ import javax.swing.border.EmptyBorder;
 
 public final class SignalsView extends View {
     private static PriceSeries lastShown;
-    private static int lastRange = Integer.MAX_VALUE;
+    private static final int[] RANGES = {21, 63, 126, 252, 504, 1260, Integer.MAX_VALUE};
+    private static final String[] RANGE_LABELS = {"1M", "3M", "6M", "1Y", "2Y", "5Y", "Max"};
+    /** Trading days of recent history the backtest covers, after its warm-up period. */
+    private static final int BACKTEST_DAYS = 5 * 252;
+    private int off;
+    private final Slot history = new Slot();
     private PriceSeries data; private boolean sample;
     private SignalEngine eng;
     private final Slot header = new Slot(), notice = new Slot(), verdict = new Slot(), stats = new Slot(), trades = new Slot(), rules = new Slot(), chips = new Slot();
@@ -69,20 +75,35 @@ public final class SignalsView extends View {
         root.add(stats);
 
         Ui.Card cc = new Ui.Card(10);
-        Ui.HBox ch = new Ui.HBox(12);
-        ch.grow(Kit.legend("Close", Theme.T.ink, "Fast SMA", Theme.T.accent, "Slow SMA", Theme.T.slow, "Buy", Theme.T.buy, "Sell", Theme.T.sell));
-        int[] ranges = {126, 252, 504, Integer.MAX_VALUE}; String[] rl = {"6M", "1Y", "2Y", "All"};
-        int sel = 3; for (int i = 0; i < 4; i++) if (ranges[i] == lastRange) sel = i;
-        Slot seg = new Slot();
-        java.util.function.IntConsumer[] pick = new java.util.function.IntConsumer[1];
-        pick[0] = i -> { lastRange = ranges[i]; chart.range(ranges[i]); seg.set(Ui.seg(rl, i, k -> pick[0].accept(k))); };
         chart = new PriceChart(this::hoverAt);
-        seg.set(Ui.seg(rl, sel, k -> pick[0].accept(k)));
-        ch.add(seg);
+        PriceChart.Type ty = PriceChart.Type.CANDLE;
+        try { ty = PriceChart.Type.valueOf(UiPrefs.get("chart.type", "CANDLE")); } catch (Exception ignored) {}
+        chart.type(ty);
+        chart.indicators(UiPrefs.getSet("chart.indicators", PriceChart.DEFAULTS));
+        int rangeDays = UiPrefs.getInt("chart.range", 252), rsel = 3;
+        for (int i = 0; i < RANGES.length; i++) if (RANGES[i] == rangeDays) rsel = i;
+        chart.range(RANGES[rsel]);
+        Slot typeSeg = new Slot(), rangeSeg = new Slot();
+        String[] types = {"Line", "Candles", "OHLC"};
+        java.util.function.IntConsumer[] pickType = new java.util.function.IntConsumer[1], pickRange = new java.util.function.IntConsumer[1];
+        pickType[0] = i -> { PriceChart.Type nt = PriceChart.Type.values()[i]; chart.type(nt); UiPrefs.put("chart.type", nt.name()); typeSeg.set(Ui.seg(types, i, k -> pickType[0].accept(k))); };
+        pickRange[0] = i -> { chart.range(RANGES[i]); UiPrefs.put("chart.range", RANGES[i] == Integer.MAX_VALUE ? 0 : RANGES[i]); rangeSeg.set(Ui.seg(RANGE_LABELS, i, k -> pickRange[0].accept(k))); };
+        if (rangeDays == 0) { rsel = 6; chart.range(Integer.MAX_VALUE); }
+        typeSeg.set(Ui.seg(types, ty.ordinal(), k -> pickType[0].accept(k)));
+        rangeSeg.set(Ui.seg(RANGE_LABELS, rsel, k -> pickRange[0].accept(k)));
+        Ui.HBox ch = new Ui.HBox(12);
+        ch.add(typeSeg); ch.glue(); ch.add(rangeSeg);
         cc.add(ch);
+        Ui.HBox tg = new Ui.HBox(6), tp = new Ui.HBox(6);
+        JLabel l1 = Ui.text("On chart", Theme.body(12f), Theme.T.muted), l2 = Ui.text("Panels", Theme.body(12f), Theme.T.muted);
+        l1.setPreferredSize(new Dimension(62, 20)); l2.setPreferredSize(new Dimension(62, 20));
+        tg.add(l1); tp.add(l2);
+        for (String[] k : new String[][]{{PriceChart.SMA, "Strategy SMAs"}, {PriceChart.EMA21, "EMA 21"}, {PriceChart.SMA200, "SMA 200"}, {PriceChart.BB, "Bollinger Bands"}, {PriceChart.SIGNALS, "Buy/sell"}}) tg.add(toggle(k[0], k[1]));
+        for (String[] k : new String[][]{{PriceChart.VOLUME, "Volume"}, {PriceChart.RSI, "RSI"}, {PriceChart.MACD, "MACD"}, {PriceChart.EQUITY, "Strategy vs buy & hold"}}) tp.add(toggle(k[0], k[1]));
+        cc.add(tg); cc.add(tp);
         Ui.VBox ro = new Ui.VBox(2); ro.add(readout); ro.add(readSig); cc.add(ro);
-        chart.range(lastRange);
         cc.add(chart);
+        cc.add(history);
 
         Ui.Card settings = Kit.card("Strategy settings", null);
         SignalParams P = s().sig;
@@ -123,7 +144,9 @@ public final class SignalsView extends View {
 
     private void show(PriceSeries d) {
         data = d; sample = "DEMO".equals(d.symbol()); lastShown = d;
-        eng = SignalEngine.run(d, s().sig);
+        PriceSeries bt = d.tail(BACKTEST_DAYS + s().sig.slow + 40);
+        off = d.size() - bt.size();
+        eng = SignalEngine.run(bt, s().sig);
         Theme t = Theme.T; double[] c = d.close(); int L = c.length - 1;
         double ch = c[L] / c[L - 1] - 1;
         Ui.VBox h = new Ui.VBox(2);
@@ -143,7 +166,7 @@ public final class SignalsView extends View {
         chips.set(cp);
         notice.set(sample ? noticeBand("Practice sample. DEMO is a made-up price series. Type a ticker or company name above and its real prices download and chart automatically.") : new JPanel() {{ setOpaque(false); setPreferredSize(new Dimension(0, 0)); }});
         if (eng.error != null) {
-            verdict.set(Ui.para(eng.error, Theme.body(14f), t.sell)); stats.set(new JPanel()); trades.set(new JPanel()); chart.set(null); rules.set(rulesCards()); return;
+            verdict.set(Ui.para(eng.error, Theme.body(14f), t.sell)); stats.set(new JPanel()); trades.set(new JPanel()); chart.set(d, null, 0, s().sig); history.set(historyLine()); rules.set(rulesCards()); return;
         }
         verdict.set(verdictPanel());
         SignalEngine.Stats S = eng.stats; double beat = S.ret() - S.bh();
@@ -154,17 +177,18 @@ public final class SignalsView extends View {
             new Ui.Kpi("Max drawdown", Fmt.pct(S.dd()), t.sell, "Buy & hold " + Fmt.pct(S.bhDd())),
             new Ui.Kpi("Win rate", S.win() == null ? "—" : Math.round(S.win() * 100) + "%", S.trades() + " closed trades, avg " + (S.avg() == null ? "—" : Fmt.pct(S.avg()))),
             new Ui.Kpi("Time invested", Math.round(S.exposure() * 100) + "%", "Rest of the time in cash")));
-        chart.set(eng);
+        chart.set(d, eng, off, s().sig);
+        history.set(historyLine());
         hoverAt(-1);
         List<SignalEngine.Trade> rows = new ArrayList<>(eng.trades); java.util.Collections.reverse(rows);
-        Ui.Card tc = Kit.card("Trade log", Ui.muted(rows.size() + " trades, newest first"));
+        Ui.Card tc = Kit.card("Trade log", Ui.muted(rows.size() + " trades in the last " + Fmt.num(eng.stats.years(), 1) + " years, newest first"));
         EditTable<SignalEngine.Trade> et = new EditTable<>(rows, null, null, "No trades with these settings. Try a shorter slow SMA or a wider RSI range.",
-            Col.<SignalEngine.Trade>label("Bought", 110, x -> Dates.dayLong(d.dates().get(x.entryI())), null),
+            Col.<SignalEngine.Trade>label("Bought", 110, x -> Dates.dayLong(eng.data.dates().get(x.entryI())), null),
             Col.<SignalEngine.Trade>calc("Entry", 90, x -> Fmt.money2(x.entryPx()), null),
-            Col.<SignalEngine.Trade>label("Sold", 110, x -> x.open() ? "Open" : Dates.dayLong(d.dates().get(x.exitI())), x -> x.open() ? t.muted : null),
+            Col.<SignalEngine.Trade>label("Sold", 110, x -> x.open() ? "Open" : Dates.dayLong(eng.data.dates().get(x.exitI())), x -> x.open() ? t.muted : null),
             Col.<SignalEngine.Trade>calc("Exit", 90, x -> Fmt.money2(x.exitPx()), null),
             Col.<SignalEngine.Trade>calc("Return", 80, x -> Fmt.pct(x.ret()), x -> Kit.signColor(x.ret())),
-            Col.<SignalEngine.Trade>calc("Days", 60, x -> String.valueOf((x.open() ? d.size() - 1 : x.exitI()) - x.entryI()), null),
+            Col.<SignalEngine.Trade>calc("Days", 60, x -> String.valueOf((x.open() ? eng.data.size() - 1 : x.exitI()) - x.entryI()), null),
             Col.<SignalEngine.Trade>label("Why it bought", 260, SignalEngine.Trade::why, null),
             Col.<SignalEngine.Trade>label("Why it sold", 260, SignalEngine.Trade::exitWhy, null));
         tc.add(et.wrap());
@@ -238,14 +262,76 @@ public final class SignalsView extends View {
     }
 
     private void hoverAt(int i) {
-        if (eng == null || eng.error != null) return;
-        int L = eng.data.size() - 1; int k = i < 0 ? L : i; SignalParams P = eng.p;
-        readout.setText(Dates.dayLong(eng.data.dates().get(k)) + "    Close " + Fmt.num(eng.data.close()[k], 2) + "    SMA " + P.fast + " " + Fmt.num(eng.fast[k], 2)
-            + "    SMA " + P.slow + " " + Fmt.num(eng.slow[k], 2) + "    RSI " + Fmt.num(eng.rsi[k], 1) + "    Strategy " + Fmt.money(eng.eq[k] * 1e4));
+        if (data == null) return;
+        PriceSeries d = data; int k = i < 0 ? d.size() - 1 : i;
+        StringBuilder b = new StringBuilder(Dates.dayLong(d.dates().get(k)));
+        if (d.hasOhlc()) b.append("    O ").append(px(d.adjOpen(k))).append("  H ").append(px(d.adjHigh(k))).append("  L ").append(px(d.adjLow(k))).append("  C ").append(px(d.close()[k]));
+        else b.append("    Close ").append(px(d.close()[k]));
+        if (k > 0) b.append("  ").append(Fmt.pct(d.close()[k] / d.close()[k - 1] - 1, 2));
+        if (d.hasVolume()) b.append("    Vol ").append(PriceChart.Fmt2.compactCount(d.vol(k)));
+        if (chart.has(PriceChart.SMA)) b.append("    SMA ").append(s().sig.fast).append(" ").append(px(chart.smaFast()[k])).append("  SMA ").append(s().sig.slow).append(" ").append(px(chart.smaSlow()[k]));
+        if (chart.has(PriceChart.EMA21)) b.append("    EMA 21 ").append(px(chart.series(PriceChart.EMA21)[k]));
+        if (chart.has(PriceChart.SMA200)) b.append("    SMA 200 ").append(px(chart.series(PriceChart.SMA200)[k]));
+        if (chart.has(PriceChart.BB)) { double[][] bb = chart.bands(); b.append("    BB ").append(px(bb[2][k])).append("–").append(px(bb[1][k])); }
+        if (chart.has(PriceChart.RSI)) b.append("    RSI ").append(Double.isNaN(chart.series(PriceChart.RSI)[k]) ? "—" : Fmt.num(chart.series(PriceChart.RSI)[k], 1));
+        if (chart.has(PriceChart.MACD)) { double[][] m = chart.macdLines(); b.append("    MACD ").append(Double.isNaN(m[0][k]) ? "—" : Fmt.num(m[0][k], 2)); }
+        int ek = k - off;
+        if (eng != null && eng.error == null && ek >= eng.start && ek < eng.eq.length) b.append("    Strategy ").append(Fmt.money(eng.eq[ek] * 1e4));
+        readout.setText(b.toString());
         readout.setForeground(Theme.T.ink);
-        SignalEngine.Signal s = eng.signalAt(k);
-        readSig.setText(s == null ? " " : (s.buy() ? "BUY: " : "SELL: ") + s.why());
-        readSig.setForeground(s == null ? Theme.T.muted : s.buy() ? Theme.T.buy : Theme.T.sell);
+        SignalEngine.Signal sg = eng != null && eng.error == null && ek >= 0 ? eng.signalAt(ek) : null;
+        readSig.setText(sg == null ? " " : (sg.buy() ? "BUY: " : "SELL: ") + sg.why());
+        readSig.setForeground(sg == null ? Theme.T.muted : sg.buy() ? Theme.T.buy : Theme.T.sell);
+    }
+    private static String px(double v) { return Double.isNaN(v) ? "—" : Fmt.num(v, v >= 1000 ? 0 : 2); }
+
+    private JComponent toggle(String key, String label) {
+        Ui.Btn b = new Ui.Btn(label, Ui.Btn.Kind.PLAIN, true) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = Ui.aa(g); Theme t = Theme.T; int h = getHeight(); boolean on = chart.has(key);
+                g2.setColor(on ? t.holdBg : t.panel); g2.fillRoundRect(0, 0, getWidth() - 1, h - 1, h, h);
+                g2.setColor(on ? t.accent : t.line); g2.drawRoundRect(0, 0, getWidth() - 1, h - 1, h, h);
+                g2.setFont(getFont()); g2.setColor(on ? t.accent : t.muted); FontMetrics fm = g2.getFontMetrics();
+                String s = (on ? "✓ " : "") + getText();
+                g2.drawString(s, (getWidth() - fm.stringWidth(s)) / 2, (h - fm.getHeight()) / 2 + fm.getAscent()); g2.dispose();
+            }
+            @Override public Dimension getPreferredSize() { FontMetrics fm = getFontMetrics(getFont()); return new Dimension(fm.stringWidth("✓ " + getText()) + 22, fm.getHeight() + 8); }
+        };
+        b.setFont(Theme.medium(12f));
+        b.addActionListener(e -> {
+            java.util.Set<String> on = UiPrefs.getSet("chart.indicators", PriceChart.DEFAULTS);
+            if (!on.remove(key)) on.add(key);
+            UiPrefs.put("chart.indicators", on); chart.indicators(on); b.repaint(); hoverAt(-1);
+        });
+        return b;
+    }
+
+    /** How much history is saved, where, and ways to get at it. */
+    private JComponent historyLine() {
+        Theme t = Theme.T; PriceSeries d = data;
+        Ui.VBox v = new Ui.VBox(6); Ui.HBox h = new Ui.HBox(14);
+        double yrs = java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.parse(d.firstDate()), java.time.LocalDate.parse(d.lastDate())) / 365.25;
+        String txt = String.format(java.util.Locale.US, "%,d trading days since %s (%s years)", d.size(), Dates.dayLong(d.firstDate()), Fmt.num(yrs, yrs < 10 ? 1 : 0));
+        if (!sample) txt += " · saved in " + app.prices().file(d.symbol()).getParent().getFileName() + "/" + app.prices().file(d.symbol()).getFileName();
+        else txt += " · practice data, not saved";
+        JTextArea info = Ui.para(txt, Theme.body(12.5f), t.muted); v.add(info);
+        if (!sample) {
+            h.add(Ui.link("Export CSV…", this::exportCsv));
+            h.add(Ui.link("Open prices folder", () -> { try { java.nio.file.Files.createDirectories(app.prices().folder()); Desktop.getDesktop().open(app.prices().folder().toFile()); } catch (Exception ex) { JOptionPane.showMessageDialog(app, "Your prices folder is:\n" + app.prices().folder()); } }));
+            h.add(Ui.link("Re-download full history", () -> {
+                String sym = d.symbol(); loading = sym; updateFreshness();
+                app.priceService().fetch(sym, PriceService.Mode.FULL, p -> { loading = null; if (app.section().equals("signals")) { show(p); app.toast(sym + ": full history downloaded again", null); } },
+                    ex -> { loading = null; updateFreshness(); app.toast("Couldn't download " + sym + ": " + PriceService.explain(ex), null); });
+            }));
+            v.add(h, false);
+        }
+        return v;
+    }
+    private void exportCsv() {
+        JFileChooser fc = new JFileChooser(); fc.setSelectedFile(new java.io.File(System.getProperty("user.home"), data.symbol() + "-daily-prices.csv"));
+        if (fc.showSaveDialog(app) != JFileChooser.APPROVE_OPTION) return;
+        try { Files.writeString(fc.getSelectedFile().toPath(), PriceCsv.write(data), StandardCharsets.UTF_8); app.toast("Saved " + fc.getSelectedFile().getName(), null); }
+        catch (Exception ex) { JOptionPane.showMessageDialog(app, "Couldn't save: " + ex.getMessage()); }
     }
 
     private JComponent rulesCards() {
@@ -298,7 +384,7 @@ public final class SignalsView extends View {
     private void loadingState(String sym) {
         Ui.Card c = new Ui.Card();
         c.add(Ui.h2("Downloading " + sym + "…"));
-        c.add(Ui.para("Getting five years of daily prices. This usually takes a second or two."));
+        c.add(Ui.para("Getting the full daily price history and saving it on this computer. The first download for a stock takes a few seconds; after that only new days are fetched."));
         verdict.set(c);
         if (symField != null) { typing = false; symField.setText(sym); typing = true; }
     }

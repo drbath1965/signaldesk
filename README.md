@@ -6,7 +6,7 @@ It comes in two versions that share the same calculations and data format:
 
 | | Desktop app (`desktop/`) | Web page (`web/`) |
 |---|---|---|
-| Runs as | `SignalDesk.jar`, Java 17+ | One HTML page, published as a claude.ai artifact |
+| Runs as | `SignalDesk-<version>.jar`, Java 17+ | One HTML page, published as a claude.ai artifact |
 | Your data | `SignalDesk/studio.json` in your home folder, saved automatically, with daily backups | Your claude.ai account |
 | Stock prices | Downloads automatically from Yahoo Finance: pick a stock and it charts, refreshing every 5 minutes | Load a price file you download |
 
@@ -21,7 +21,7 @@ It comes in two versions that share the same calculations and data format:
 - **Net worth**: accounts and assets against debts, with a monthly history.
 - **Retirement**: year-by-year projection in today's dollars across traditional, Roth and taxable savings, with employer match, Social Security, 2026 IRS 401(k) limits, and a drawdown to your plan-to age.
 - **Investments**: holdings, gains, and allocation against targets with rebalancing amounts.
-- **Stock signals**: a rules-based trend and momentum model (SMA crossovers confirmed by MACD, RSI dip-buys, trailing stop) with a backtest against buy-and-hold.
+- **Stock signals**: line, candlestick or OHLC charts over a stock's full daily history, with optional SMA, EMA 21, SMA 200, Bollinger Bands, volume, RSI and MACD; plus a rules-based trend and momentum model (SMA crossovers confirmed by MACD, RSI dip-buys, trailing stop) backtested over the last five years against buy-and-hold.
 - **Backlog**: the project's own to-do board.
 
 ![Stock signals](docs/signals.png)
@@ -29,10 +29,10 @@ It comes in two versions that share the same calculations and data format:
 ## Desktop app
 
 ### Run
-Double-click `SignalDesk.jar`, or:
+Double-click `SignalDesk-1.1.0.jar` (the number is the version), or:
 
 ```sh
-java -jar SignalDesk.jar
+java -jar SignalDesk-1.1.0.jar
 ```
 
 Requires Java 17 or newer. There are no other dependencies.
@@ -40,8 +40,9 @@ Requires Java 17 or newer. There are no other dependencies.
 ### Build
 ```sh
 cd desktop
-./build.sh        # produces desktop/SignalDesk.jar
+./build.sh        # produces desktop/SignalDesk-<version>.jar
 ```
+The version lives in `desktop/VERSION`. Change it there and rebuild; the jar's name, its manifest and the version shown in the app all follow.
 
 ### Code layout
 ```
@@ -56,14 +57,18 @@ desktop/src/com/signaldesk/
   ui/views/         one class per section
 desktop/res/fonts/  Inter and DejaVu Sans Mono, bundled so the app looks the same everywhere (licenses included)
 desktop/test/       Parity (checks numbers), Roundtrip (save and reload), Shots (renders each section to PNG),
-                    AutoPrices + mock/yahoo_mock.py (end-to-end price download against a local stand-in server)
+                    AutoPrices + mock/yahoo_mock.py (end-to-end price download against a local stand-in server),
+                    HistoryTest (full download, saved file, incremental merge, re-download after a dividend),
+                    ChartShots (renders the chart types)
 ```
 
 ### Moving data between versions
 In the web version, use **Backup & data → Export backup**. In the desktop app, use **Backup & data → Restore from backup** and pick that file. The two versions do not sync automatically.
 
 ### Stock prices
-Type a ticker (MSFT) or a company name (Microsoft) on the Stock signals page and pick a match. Five years of daily prices download from Yahoo Finance's public chart service, are saved in `SignalDesk/prices`, and chart right away. While the page is open they refresh every 5 minutes, and holdings on the Investments page update when the app opens. No account or API key is needed. If the service can't be reached, the last saved prices are shown. Yahoo's service is free but unofficial, so it can change without notice.
+Type a ticker (MSFT) or a company name (Microsoft) on the Stock signals page and pick a match. The stock's entire daily history (open, high, low, close, adjusted close and volume) downloads from Yahoo Finance's public chart service and is saved as `SignalDesk/prices/<SYMBOL>.csv` in the standard `Date,Open,High,Low,Close,Adj Close,Volume` layout, which opens in Excel. After the first download only the last month is fetched and merged in. If those days no longer match what's saved (a split or dividend changed past adjusted prices), the full history is downloaded again. While the page is open prices refresh every 5 minutes, and holdings on the Investments page update when the app opens. No account or API key is needed. If the service can't be reached, the last saved prices are shown. Yahoo's service is free but unofficial, so it can change without notice.
+
+Charts show adjusted prices, so candles, the close line and every indicator stay on one consistent scale across splits and dividends. Chart type, range and indicators are remembered in `SignalDesk/settings.json`.
 
 ## Web version
 `web/index.html` is the published page. It runs inside claude.ai, where it saves to your account.

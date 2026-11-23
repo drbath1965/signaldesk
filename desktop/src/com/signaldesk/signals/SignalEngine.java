@@ -29,12 +29,12 @@ public final class SignalEngine {
 
     public static SignalEngine run(PriceSeries d, SignalParams p) { SignalEngine e = new SignalEngine(d, p); e.compute(); return e; }
 
-    static double[] sma(double[] a, int n) {
+    public static double[] sma(double[] a, int n) {
         double[] o = nanArray(a.length); double s = 0;
         for (int i = 0; i < a.length; i++) { s += a[i]; if (i >= n) s -= a[i - n]; if (i >= n - 1) o[i] = s / n; }
         return o;
     }
-    static double[] ema(double[] a, int n) {
+    public static double[] ema(double[] a, int n) {
         double[] o = nanArray(a.length); int k = 0;
         while (k < a.length && Double.isNaN(a[k])) k++;
         if (k + n > a.length) return o;
@@ -43,7 +43,7 @@ public final class SignalEngine {
         for (int i = k + n; i < a.length; i++) { e = a[i] * al + e * (1 - al); o[i] = e; }
         return o;
     }
-    static double[] rsi(double[] c, int n) {
+    public static double[] rsi(double[] c, int n) {
         double[] o = nanArray(c.length); if (c.length <= n) return o;
         double g = 0, l = 0;
         for (int i = 1; i <= n; i++) { double d = c[i] - c[i - 1]; if (d > 0) g += d; else l -= d; }
@@ -146,7 +146,17 @@ public final class SignalEngine {
         while (dates.size() < total) { d = d.minusDays(1); if (d.getDayOfWeek().getValue() <= 5) dates.add(0, d.toString()); }
         double[] close = new double[total]; double px = 100; int k = 0;
         for (double[] r : regimes) for (int j = 0; j < (int) r[0]; j++) { px *= Math.exp(r[1] - r[2] * r[2] / 2 + r[2] * norm.getAsDouble()); close[k++] = Math.round(px * 100) / 100.0; }
-        return new PriceSeries("DEMO", dates, close);
+        // Made-up intraday ranges and volume so the practice sample can show candles; closes match the web studio's sample.
+        java.util.Random R = new java.util.Random(7);
+        double[] o = new double[total], h = new double[total], l = new double[total], v = new double[total];
+        for (int i = 0; i < total; i++) {
+            double prev = i == 0 ? close[0] : close[i - 1];
+            o[i] = Math.round(prev * (1 + R.nextGaussian() * .004) * 100) / 100.0;
+            h[i] = Math.round(Math.max(o[i], close[i]) * (1 + Math.abs(R.nextGaussian()) * .006) * 100) / 100.0;
+            l[i] = Math.round(Math.min(o[i], close[i]) * (1 - Math.abs(R.nextGaussian()) * .006) * 100) / 100.0;
+            v[i] = Math.round(2_000_000 * (1 + Math.abs(R.nextGaussian()) + Math.abs(close[i] / prev - 1) * 40));
+        }
+        return new PriceSeries("DEMO", dates, close, o, h, l, close.clone(), v);
     }
     private static int imul(int a, int b) { return a * b; }
 }

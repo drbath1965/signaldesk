@@ -58,9 +58,10 @@ public final class PriceStore {
     public synchronized void put(PriceSeries s) throws IOException { put(s, null, Instant.now()); }
     public synchronized void put(PriceSeries s, String name, Instant fetched) throws IOException {
         Files.createDirectories(dir);
-        StringBuilder b = new StringBuilder("Date,Close\n");
-        for (int i = 0; i < s.size(); i++) b.append(s.dates().get(i)).append(',').append(s.close()[i]).append('\n');
-        Files.writeString(fileFor(s.symbol()), b.toString(), StandardCharsets.UTF_8);
+        Path f = fileFor(s.symbol()), tmp = f.resolveSibling(f.getFileName() + ".tmp");
+        Files.writeString(tmp, PriceCsv.write(s), StandardCharsets.UTF_8);
+        try { Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE); }
+        catch (AtomicMoveNotSupportedException e) { Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING); }
         cache.put(s.symbol(), s);
         Map<String, Object> e = new LinkedHashMap<>(Json.obj(index().get(s.symbol())));
         if (name != null && !name.isBlank()) e.put("name", name);
@@ -68,6 +69,8 @@ public final class PriceStore {
         index().put(s.symbol(), e);
         Files.writeString(indexFile(), Json.write(index()), StandardCharsets.UTF_8);
     }
+    public Path file(String sym) { return fileFor(clean(sym)); }
+    public Path folder() { return dir; }
     /** Symbols with saved prices, most recently updated first. */
     public synchronized List<String> symbols() {
         if (!Files.isDirectory(dir)) return List.of();

@@ -30,7 +30,8 @@ public final class PriceDownloader {
     /** A symbol the service doesn't know. */
     public static final class NotFound extends Exception { public NotFound(String m) { super(m); } }
 
-    public record Result(PriceSeries series, String name, String currency, String exchange, Instant fetched) {}
+    /** full is true when the whole history was downloaded; added counts days that were new. */
+    public record Result(PriceSeries series, String name, String currency, String exchange, Instant fetched, boolean full, int added) {}
     public record Match(String symbol, String name, String exchange, String type) {
         @Override public String toString() { return symbol + "  " + name; }
     }
@@ -42,15 +43,62 @@ public final class PriceDownloader {
     public static String quotePage(String sym) { return "https://finance.yahoo.com/quote/" + enc(yahooSymbol(sym)) + "/history/"; }
     private static String enc(String s) { return URLEncoder.encode(s, StandardCharsets.UTF_8); }
 
-    /** Five years of daily closes (split- and dividend-adjusted), including today's latest price while the market is open. */
-    public static Result download(String sym) throws Exception {
+    /** Full daily history for a symbol. */
+    public static Result download(String sym) throws Exception { return download(sym, null); }
+
+    /**
+     * Brings saved prices up to date. With a recent saved history, only the last month is fetched and merged in.
+     * If those overlapping days no longer match (a split or dividend changed past adjusted prices), or nothing
+     * usable is saved, the entire history is downloaded instead.
+     */
+    public static Result download(String sym, PriceSeries saved) throws Exception {
+        if (saved != null && saved.hasOhlc() && saved.size() >= 60) {
+            long gap = java.time.temporal.ChronoUnit.DAYS.between(LocalDate.parse(saved.lastDate()), LocalDate.now());
+            if (gap >= 0 && gap <= 25) {
+                Result recent = fetch(sym, "range=1mo&interval=1d", 1);
+                if (consistent(saved, recent.series())) {
+                    PriceSeries merged = merge(saved, recent.series());
+                    return new Result(merged, recent.name(), recent.currency(), recent.exchange(), recent.fetched(), false, merged.size() - saved.size());
+                }
+            }
+        }
+        long now = Instant.now().getEpochSecond() + 86400;
+        Result full = fetch(sym, "period1=-2208988800&period2=" + now + "&interval=1d", 60);
+        return new Result(full.series(), full.name(), full.currency(), full.exchange(), full.fetched(), true, full.series().size() - (saved == null ? 0 : saved.size()));
+    }
+
+    private static Result fetch(String sym, String query, int minRows) throws Exception {
         Exception last = null;
         for (String host : hosts()) {
-            try { return parseChart(get(host + "/v8/finance/chart/" + enc(yahooSymbol(sym)) + "?range=5y&interval=1d&includeAdjustedClose=true&events=div%2Csplits"), sym); }
+            try { return parseChart(get(host + "/v8/finance/chart/" + enc(yahooSymbol(sym)) + "?" + query + "&includeAdjustedClose=true&events=div%2Csplits"), sym, minRows); }
             catch (NotFound e) { throw e; }
             catch (Exception e) { last = e; }
         }
         throw last;
+    }
+
+    /** True when overlapping days agree, apart from the newest two (today's price moves; yesterday's can be revised). */
+    public static boolean consistent(PriceSeries saved, PriceSeries recent) {
+        java.util.Map<String, Integer> at = new java.util.HashMap<>();
+        for (int i = 0; i < saved.size(); i++) at.put(saved.dates().get(i), i);
+        int overlap = 0;
+        for (int j = 0; j < recent.size() - 2; j++) {
+            Integer i = at.get(recent.dates().get(j)); if (i == null) continue;
+            overlap++;
+            if (Math.abs(saved.close()[i] / recent.close()[j] - 1) > 5e-4) return false;
+            if (saved.hasOhlc() && recent.hasOhlc() && Math.abs(saved.rawClose()[i] / recent.rawClose()[j] - 1) > 5e-4) return false;
+        }
+        return overlap >= 3;
+    }
+    /** Saved days, with the recent download replacing and extending the end. */
+    public static PriceSeries merge(PriceSeries saved, PriceSeries recent) {
+        java.util.TreeMap<String, double[]> m = new java.util.TreeMap<>();
+        for (PriceSeries p : new PriceSeries[]{saved, recent})
+            for (int i = 0; i < p.size(); i++) m.put(p.dates().get(i), new double[]{p.close()[i], p.open()[i], p.high()[i], p.low()[i], p.rawClose()[i], p.vol(i)});
+        int n = m.size(); java.util.List<String> d = new java.util.ArrayList<>(n);
+        double[] c = new double[n], o = new double[n], h = new double[n], l = new double[n], r = new double[n], v = new double[n]; int k = 0;
+        for (java.util.Map.Entry<String, double[]> e : m.entrySet()) { double[] x = e.getValue(); d.add(e.getKey()); c[k] = x[0]; o[k] = x[1]; h[k] = x[2]; l[k] = x[3]; r[k] = x[4]; v[k] = x[5]; k++; }
+        return new PriceSeries(saved.symbol(), d, c, o, h, l, r, v);
     }
 
     /** Stocks, ETFs, funds and indexes matching a name or ticker. */
@@ -79,32 +127,44 @@ public final class PriceDownloader {
     }
 
     // ------------------------------------------------------------------ parsing (public for tests)
-    public static Result parseChart(String body, String sym) throws Exception {
+    public static Result parseChart(String body, String sym) throws Exception { return parseChart(body, sym, 60); }
+    public static Result parseChart(String body, String sym, int minRows) throws Exception {
         Map<String, Object> chart = Json.obj(Json.obj(Json.parse(body)), "chart");
         Object err = chart.get("error");
         if (err instanceof Map<?, ?> em && !em.isEmpty()) throw new NotFound(Json.str(Json.obj(err), "description", "No data for " + sym + "."));
         List<Object> results = Json.arr(chart, "result");
         if (results.isEmpty()) throw new NotFound("No price history found for " + sym + ".");
         Map<String, Object> r = Json.obj(results.get(0)), meta = Json.obj(r, "meta"), ind = Json.obj(r, "indicators");
+        String gran = Json.str(meta, "dataGranularity", "1d");
+        if (!gran.equals("1d")) throw new Exception("The price service sent " + gran + " prices instead of daily ones.");
         long offset = (long) Json.num(meta, "gmtoffset", 0);
         List<Object> ts = Json.arr(r, "timestamp");
         List<Object> adj = Json.arr(Json.obj(Json.arr(ind, "adjclose").isEmpty() ? null : Json.arr(ind, "adjclose").get(0)), "adjclose");
-        List<Object> close = Json.arr(Json.obj(Json.arr(ind, "quote").isEmpty() ? null : Json.arr(ind, "quote").get(0)), "close");
-        TreeMap<LocalDate, Double> byDate = new TreeMap<>();
+        Map<String, Object> q = Json.obj(Json.arr(ind, "quote").isEmpty() ? null : Json.arr(ind, "quote").get(0));
+        List<Object> close = Json.arr(q, "close"), open = Json.arr(q, "open"), high = Json.arr(q, "high"), low = Json.arr(q, "low"), vol = Json.arr(q, "volume");
+        TreeMap<LocalDate, double[]> byDate = new TreeMap<>();
         for (int i = 0; i < ts.size(); i++) {
             if (!(ts.get(i) instanceof Number t)) continue;
-            Object v = i < adj.size() && adj.get(i) instanceof Number ? adj.get(i) : i < close.size() ? close.get(i) : null;
-            if (!(v instanceof Number n) || n.doubleValue() <= 0) continue;
+            Double c = num(close, i), a = num(adj, i);
+            if (c == null && a == null) continue;
+            if (a == null) a = c; if (c == null) c = a;
+            if (a <= 0 || c <= 0) continue;
+            double o = orElse(num(open, i), c), h = orElse(num(high, i), Math.max(o, c)), l = orElse(num(low, i), Math.min(o, c));
+            h = Math.max(h, Math.max(o, c)); l = Math.min(l, Math.min(o, c));
             LocalDate d = Instant.ofEpochSecond(t.longValue() + offset).atZone(ZoneOffset.UTC).toLocalDate();
-            byDate.put(d, Math.round(n.doubleValue() * 10000) / 10000.0);
+            byDate.put(d, new double[]{round(a), round(o), round(h), round(l), round(c), orElse(num(vol, i), 0)});
         }
-        if (byDate.size() < 60) throw new NotFound("Only " + byDate.size() + " days of history are available for " + sym + ", too few to analyze.");
-        List<String> dates = new ArrayList<>(); double[] c = new double[byDate.size()]; int k = 0;
-        for (Map.Entry<LocalDate, Double> e : byDate.entrySet()) { dates.add(e.getKey().toString()); c[k++] = e.getValue(); }
+        if (byDate.size() < minRows) throw new NotFound("Only " + byDate.size() + " days of history are available for " + sym + ", too few to analyze.");
+        int n = byDate.size(); List<String> dates = new ArrayList<>(n);
+        double[] ac = new double[n], o = new double[n], h = new double[n], l = new double[n], rc = new double[n], v = new double[n]; int k = 0;
+        for (Map.Entry<LocalDate, double[]> e : byDate.entrySet()) { double[] x = e.getValue(); dates.add(e.getKey().toString()); ac[k] = x[0]; o[k] = x[1]; h[k] = x[2]; l[k] = x[3]; rc[k] = x[4]; v[k] = x[5]; k++; }
         String name = Json.str(meta, "longName", Json.str(meta, "shortName", ""));
-        return new Result(new PriceSeries(sym, dates, c), name, Json.str(meta, "currency", "USD"),
-            Json.str(meta, "fullExchangeName", Json.str(meta, "exchangeName", "")), Instant.now());
+        return new Result(new PriceSeries(sym, dates, ac, o, h, l, rc, v), name, Json.str(meta, "currency", "USD"),
+            Json.str(meta, "fullExchangeName", Json.str(meta, "exchangeName", "")), Instant.now(), true, n);
     }
+    private static Double num(List<Object> a, int i) { return i < a.size() && a.get(i) instanceof Number n ? n.doubleValue() : null; }
+    private static double orElse(Double v, double d) { return v == null ? d : v; }
+    private static double round(double v) { return Math.round(v * 10000) / 10000.0; }
 
     public static List<Match> parseSearch(String body) {
         List<Match> out = new ArrayList<>();

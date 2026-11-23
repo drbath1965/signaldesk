@@ -28,13 +28,16 @@ public final class PriceService {
      * Gets current prices for one symbol. Saved prices younger than 15 minutes are used as is;
      * otherwise a fresh download replaces them. Errors arrive only through onError.
      */
-    public void fetch(String sym, boolean force, Consumer<PriceSeries> onData, Consumer<Exception> onError) {
+    /** CACHED reuses prices under 15 minutes old; LATEST fetches recent days now; FULL downloads the entire history again. */
+    public enum Mode { CACHED, LATEST, FULL }
+    public void fetch(String sym, boolean force, Consumer<PriceSeries> onData, Consumer<Exception> onError) { fetch(sym, force ? Mode.LATEST : Mode.CACHED, onData, onError); }
+    public void fetch(String sym, Mode mode, Consumer<PriceSeries> onData, Consumer<Exception> onError) {
         String s = PriceStore.clean(sym);
-        if (!force && store().isFresh(s)) { onData.accept(store().get(s)); return; }
+        if (mode == Mode.CACHED && store().isFresh(s)) { onData.accept(store().get(s)); return; }
         if (!inFlight.add(s)) return;
         new SwingWorker<PriceDownloader.Result, Void>() {
             @Override protected PriceDownloader.Result doInBackground() throws Exception {
-                PriceDownloader.Result r = PriceDownloader.download(s);
+                PriceDownloader.Result r = PriceDownloader.download(s, mode == Mode.FULL ? null : store().get(s));
                 store().put(r.series(), r.name(), r.fetched());
                 return r;
             }
@@ -60,7 +63,7 @@ public final class PriceService {
                 for (String s : syms) {
                     try {
                         if (!force && store().isFresh(s)) { got.put(s, store().get(s).last()); continue; }
-                        PriceDownloader.Result r = PriceDownloader.download(s);
+                        PriceDownloader.Result r = PriceDownloader.download(s, store().get(s));
                         store().put(r.series(), r.name(), r.fetched());
                         got.put(s, r.series().last());
                         Thread.sleep(350);

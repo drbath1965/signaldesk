@@ -20,7 +20,8 @@ import javax.swing.border.EmptyBorder;
 
 /** The studio window: sidebar navigation, the current section, autosave and messages. */
 public final class MainFrame extends JFrame {
-    public static final String VERSION = "1.0.0";
+    /** From the jar's manifest, which build.sh fills in from the VERSION file. */
+    public static final String VERSION = java.util.Optional.ofNullable(MainFrame.class.getPackage().getImplementationVersion()).orElse("dev");
     private static final Map<String, String> SECTIONS = new LinkedHashMap<>();
     static {
         SECTIONS.put("overview", "Overview"); SECTIONS.put("budget", "Budget"); SECTIONS.put("bills", "Bills");
@@ -45,7 +46,7 @@ public final class MainFrame extends JFrame {
     private final PriceService priceService = new PriceService(this);
 
     public MainFrame(Studio studio, StudioStore store, PriceStore prices, String loadNote) {
-        super("Signal Desk");
+        super("Signal Desk " + VERSION);
         this.studio = studio; this.store = store; this.prices = prices;
         setIconImages(List.of(icon(16), icon(32), icon(64), icon(128)));
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
