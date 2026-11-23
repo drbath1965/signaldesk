@@ -1,0 +1,17 @@
+# Build output
+desktop/out/
+desktop/manifest.txt
+*.jar
+*.class
+
+# Local data and test runs
+desktop/home/
+desktop/shots/
+SignalDesk/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
