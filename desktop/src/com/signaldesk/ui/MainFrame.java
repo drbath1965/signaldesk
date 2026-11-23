@@ -42,6 +42,7 @@ public final class MainFrame extends JFrame {
     private Timer toastTimer;
     private String saveState = "";
     private String pendingSymbol;
+    private final PriceService priceService = new PriceService(this);
 
     public MainFrame(Studio studio, StudioStore store, PriceStore prices, String loadNote) {
         super("Signal Desk");
@@ -61,6 +62,7 @@ public final class MainFrame extends JFrame {
         saveState = store.exists() ? "Saved" : studio.example ? "Example data, not saved yet" : "Not saved yet";
         updateSaveLabel();
         if (loadNote != null) SwingUtilities.invokeLater(() -> toast(loadNote, null));
+        if (!Boolean.getBoolean("signaldesk.offline")) SwingUtilities.invokeLater(() -> priceService.refreshHoldings(false, null));
     }
 
     // ------------------------------------------------------------------ public API for views
@@ -68,6 +70,19 @@ public final class MainFrame extends JFrame {
     public PriceStore prices() { return prices; }
     public StudioStore store() { return store; }
     public String section() { return section; }
+    public PriceService priceService() { return priceService; }
+
+    /** New prices arrived for holdings: save (unless showing the example) and redraw computed parts. */
+    public void pricesUpdated() {
+        studio.nwHist.put(Dates.cur(), (double) Math.round(NetWorth.of(studio).net()));
+        if (!studio.example) { saveState = "Saving…"; updateSaveLabel(); saveTimer.restart(); }
+        refreshCurrent();
+    }
+    /** Redraw the current section's computed parts without touching inputs. */
+    public void refreshCurrent() {
+        if (current instanceof OverviewView) rebuild();
+        else if (current != null) current.refresh();
+    }
 
     /** Call after any edit: drops the example flag, records net worth, schedules a save, refreshes computed parts. */
     public void changed() {

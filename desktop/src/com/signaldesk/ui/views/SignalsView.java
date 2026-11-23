@@ -7,6 +7,7 @@ import com.signaldesk.store.PriceDownloader;
 import com.signaldesk.store.PriceStore;
 import com.signaldesk.ui.*;
 import com.signaldesk.ui.EditTable.Col;
+import com.signaldesk.ui.PriceService;
 import java.awt.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -26,8 +27,12 @@ public final class SignalsView extends View {
     private PriceChart chart;
     private JTextField symField;
     private JLabel paramHint;
-    private Timer debounce;
+    private Timer debounce, autoRefresh, searchDelay;
     private final String requested;
+    private final JLabel updated = Ui.text(" ", Theme.body(12.5f), Theme.T.muted);
+    private JPopupMenu suggest;
+    private boolean typing = true;
+    private String loading;
 
     public SignalsView(MainFrame app, String requested) { super(app); this.requested = requested; }
 
@@ -43,19 +48,21 @@ public final class SignalsView extends View {
         top.grow(header);
         symField = Ui.field(sample ? "" : data.symbol(), 9);
         symField.setFont(Theme.mono(18f));
-        symField.addActionListener(e -> analyze(symField.getText(), false));
+        symField.setToolTipText("Type a ticker such as MSFT, or a company name such as Microsoft");
+        symField.addActionListener(e -> { hideSuggest(); analyze(symField.getText(), false); });
+        installSuggestions();
         Ui.VBox form = new Ui.VBox(6);
-        form.add(Ui.caps("Stock symbol"), false);
+        form.add(Ui.caps("Stock symbol or company"), false);
         Ui.HBox fr = new Ui.HBox(8); symField.setPreferredSize(new Dimension(170, 40)); fr.add(symField); fr.add(Ui.primary("Analyze", () -> analyze(symField.getText(), false)));
         form.add(fr, false);
         form.add(chips, false);
         top.add(form);
         root.add(top);
-        Ui.HBox tools = new Ui.HBox(8);
-        tools.add(Ui.btn("Download latest prices", () -> analyze(sample ? symField.getText() : data.symbol(), true)));
-        tools.add(Ui.btn("Load price file…", this::loadFile));
-        tools.add(Ui.link(sample ? "Showing sample" : "Show sample", () -> { show(SignalEngine.sample()); }));
+        Ui.HBox tools = new Ui.HBox(12);
+        tools.add(Ui.btn("Refresh now", () -> { if (!sample) analyze(data.symbol(), true); else app.toast("Pick a stock first.", null); }));
+        tools.add(updated);
         tools.glue();
+        tools.add(Ui.link("Show practice sample", () -> show(SignalEngine.sample())));
         root.add(tools);
         root.add(notice);
         root.add(verdict);
@@ -88,8 +95,14 @@ public final class SignalsView extends View {
         root.add(Ui.rail(cc, settings, 320));
         root.add(trades);
         root.add(rules);
-        if (requested != null) SwingUtilities.invokeLater(() -> analyze(requested, false));
         show(data);
+        if (requested != null) SwingUtilities.invokeLater(() -> analyze(requested, false));
+        else if (!sample) SwingUtilities.invokeLater(() -> analyze(data.symbol(), false));
+        autoRefresh = new Timer(5 * 60 * 1000, e -> {
+            if (chart == null || !chart.isShowing()) { ((Timer) e.getSource()).stop(); return; }
+            if (!sample && loading == null) refreshQuietly(data.symbol());
+        });
+        autoRefresh.start();
         return root;
     }
 
@@ -117,18 +130,18 @@ public final class SignalsView extends View {
         h.add(Ui.caps("Stock signals"), false);
         Ui.HBox line = new Ui.HBox(14); line.add(Ui.h1(d.symbol())); line.add(Ui.mono(Fmt.money2(c[L]), 20f, t.ink)); line.add(Ui.mono(Fmt.pct(ch, 2) + " on the day", 14f, Kit.signColor(ch)));
         h.add(line, false);
-        h.add(Ui.mono("Close of " + Dates.dayLong(d.lastDate()), 12.5f, t.muted), false);
+        String nm = sample ? "" : app.prices().name(d.symbol());
+        h.add(Ui.text((nm.isBlank() ? "" : nm + "   ·   ") + "Last price " + Dates.dayLong(d.lastDate()), Theme.body(13f), t.muted), false);
         header.set(h);
-        if (symField != null && !sample) symField.setText(d.symbol());
+        updateFreshness();
+        if (symField != null && !sample && !symField.isFocusOwner()) { typing = false; symField.setText(d.symbol()); typing = true; }
         // chips
         Ui.HBox cp = new Ui.HBox(6);
         List<String> saved = app.prices().symbols();
         if (saved.isEmpty()) cp.add(Ui.hint("Type any US ticker, then press Analyze."));
         else { cp.add(Ui.text("Saved:", Theme.body(12.5f), t.muted)); for (String sym : saved.subList(0, Math.min(8, saved.size()))) cp.add(chip(sym, !sample && sym.equals(d.symbol()))); }
         chips.set(cp);
-        notice.set(noticeBand(sample
-            ? "Sample data. DEMO is a synthetic price series for practice. Enter a stock symbol above to analyze a real company."
-            : d.symbol() + ": " + d.size() + " daily closes from " + Dates.dayLong(d.dates().get(0)) + " to " + Dates.dayLong(d.lastDate()) + ". Use Download latest prices to bring it up to date."));
+        notice.set(sample ? noticeBand("Practice sample. DEMO is a made-up price series. Type a ticker or company name above and its real prices download and chart automatically.") : new JPanel() {{ setOpaque(false); setPreferredSize(new Dimension(0, 0)); }});
         if (eng.error != null) {
             verdict.set(Ui.para(eng.error, Theme.body(14f), t.sell)); stats.set(new JPanel()); trades.set(new JPanel()); chart.set(null); rules.set(rulesCards()); return;
         }
@@ -257,35 +270,122 @@ public final class SignalsView extends View {
     }
 
     // ------------------------------------------------------------------ getting prices
-    private void analyze(String raw, boolean forceDownload) {
+    /** Show a symbol right away from saved prices if there are any, and bring it up to date in the background. */
+    private void analyze(String raw, boolean force) {
         String sym = PriceStore.clean(raw);
-        if (sym.isEmpty() || sym.equals("DEMO")) { if (sym.isEmpty()) { symField.requestFocusInWindow(); app.toast("Type a stock symbol, such as MSFT.", null); } return; }
-        if (!forceDownload) { PriceSeries cached = app.prices().get(sym); if (cached != null) { show(cached); return; } }
-        app.toast("Downloading daily prices for " + sym + "…", null);
-        new SwingWorker<PriceSeries, Void>() {
-            @Override protected PriceSeries doInBackground() throws Exception { return PriceDownloader.download(sym); }
-            @Override protected void done() {
-                try { PriceSeries p = get(); app.prices().put(p); show(p); app.toast(sym + " updated through " + Dates.dayLong(p.lastDate()), null); }
-                catch (Exception ex) {
-                    Throwable c = ex.getCause() != null ? ex.getCause() : ex;
-                    String why = c instanceof java.io.IOException || c instanceof java.net.http.HttpTimeoutException ? "Couldn't reach the price service. Check your internet connection." : c.getMessage();
-                    downloadHelp(sym, why);
+        if (sym.isEmpty() || sym.equals("DEMO")) { if (sym.isEmpty()) { symField.requestFocusInWindow(); app.toast("Type a ticker or company name, such as MSFT or Microsoft.", null); } return; }
+        PriceSeries cached = app.prices().get(sym);
+        if (cached != null && (sample || !sym.equals(data.symbol()))) show(cached);
+        if (!force && cached != null && app.prices().isFresh(sym)) return;
+        loading = sym; updateFreshness();
+        if (cached == null) loadingState(sym);
+        app.priceService().fetch(sym, true, p -> {
+            loading = null;
+            if (!app.section().equals("signals")) return;
+            show(p);
+        }, ex -> {
+            loading = null; updateFreshness();
+            if (!app.section().equals("signals")) return;
+            if (cached != null) { app.toast("Couldn't update " + sym + ". Showing prices from " + ago(app.prices().fetchedAt(sym)) + ".", null); return; }
+            if (sample || data == null) show(data == null ? SignalEngine.sample() : data);
+            downloadHelp(sym, PriceService.explain(ex), ex instanceof PriceDownloader.NotFound);
+        });
+    }
+    private void refreshQuietly(String sym) {
+        loading = sym; updateFreshness();
+        app.priceService().fetch(sym, true, p -> { loading = null; if (sym.equals(data.symbol()) && app.section().equals("signals")) show(p); }, ex -> { loading = null; updateFreshness(); });
+    }
+    private void loadingState(String sym) {
+        Ui.Card c = new Ui.Card();
+        c.add(Ui.h2("Downloading " + sym + "…"));
+        c.add(Ui.para("Getting five years of daily prices. This usually takes a second or two."));
+        verdict.set(c);
+        if (symField != null) { typing = false; symField.setText(sym); typing = true; }
+    }
+    private void updateFreshness() {
+        if (sample) { updated.setText("Showing the practice sample"); updated.setForeground(Theme.T.muted); return; }
+        if (loading != null) { updated.setText("Updating " + loading + "…"); updated.setForeground(Theme.T.accent); return; }
+        java.time.Instant f = app.prices().fetchedAt(data.symbol());
+        updated.setText(f == null ? "Not updated yet" : "Prices updated " + ago(f) + " from Yahoo Finance · refreshes every 5 minutes while open");
+        updated.setForeground(Theme.T.muted);
+    }
+    static String ago(java.time.Instant t) {
+        if (t == null) return "earlier";
+        long m = java.time.Duration.between(t, java.time.Instant.now()).toMinutes();
+        if (m < 1) return "just now";
+        if (m < 60) return m + " min ago";
+        java.time.LocalDateTime lt = java.time.LocalDateTime.ofInstant(t, java.time.ZoneId.systemDefault());
+        return (lt.toLocalDate().equals(java.time.LocalDate.now()) ? "today" : Dates.dayShort(lt.toLocalDate().toString())) + " at " + lt.format(java.time.format.DateTimeFormatter.ofPattern("h:mm a", java.util.Locale.US));
+    }
+    private void downloadHelp(String sym, String why, boolean notFound) {
+        Object[] opts = notFound ? new Object[]{"Search by company name", "Cancel"} : new Object[]{"Try again", "Load a price file instead", "Cancel"};
+        int r = JOptionPane.showOptionDialog(app, why, "Prices for " + sym, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, opts, opts[0]);
+        if (notFound) { if (r == 0) { symField.requestFocusInWindow(); symField.selectAll(); } return; }
+        if (r == 0) analyze(sym, true);
+        else if (r == 1) loadFile(sym);
+    }
+
+    // ------------------------------------------------------------------ suggestions while typing
+    private void installSuggestions() {
+        suggest = new JPopupMenu(); suggest.setFocusable(false);
+        suggest.setBorder(BorderFactory.createLineBorder(Theme.T.line));
+        searchDelay = new Timer(300, e -> runSearch()); searchDelay.setRepeats(false);
+        symField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            void ch() { if (typing && symField.isFocusOwner()) searchDelay.restart(); }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { ch(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { ch(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { ch(); }
+        });
+        symField.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override public void keyPressed(java.awt.event.KeyEvent e) {
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ESCAPE) hideSuggest();
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_DOWN && suggest.isVisible() && suggest.getComponentCount() > 0) {
+                    MenuSelectionManager.defaultManager().setSelectedPath(new MenuElement[]{suggest, (MenuElement) suggest.getComponent(0)});
                 }
+            }
+        });
+        symField.addFocusListener(new java.awt.event.FocusAdapter() { @Override public void focusLost(java.awt.event.FocusEvent e) { SwingUtilities.invokeLater(() -> { if (!suggest.isVisible() || !symField.isShowing()) return; }); } });
+    }
+    private void hideSuggest() { if (suggest != null) suggest.setVisible(false); if (searchDelay != null) searchDelay.stop(); }
+    private void runSearch() {
+        String q = symField.getText().trim();
+        if (q.length() < 1) { hideSuggest(); return; }
+        new SwingWorker<java.util.List<PriceDownloader.Match>, Void>() {
+            @Override protected java.util.List<PriceDownloader.Match> doInBackground() throws Exception { return PriceDownloader.search(q); }
+            @Override protected void done() {
+                java.util.List<PriceDownloader.Match> ms;
+                try { ms = get(); } catch (Exception ex) { return; }
+                if (!q.equals(symField.getText().trim()) || !symField.isShowing()) return;
+                suggest.removeAll();
+                if (ms.isEmpty()) { suggest.setVisible(false); return; }
+                for (PriceDownloader.Match m : ms) {
+                    JMenuItem it = new JMenuItem() {
+                        @Override protected void paintComponent(Graphics g) {
+                            Graphics2D g2 = Ui.aa(g); Theme t = Theme.T; boolean on = isArmed() || getModel().isRollover();
+                            g2.setColor(on ? t.soft : t.panel); g2.fillRect(0, 0, getWidth(), getHeight());
+                            g2.setFont(Theme.monoBold(13f)); g2.setColor(t.ink); g2.drawString(m.symbol(), 12, 20);
+                            g2.setFont(Theme.body(13f)); g2.setColor(t.ink);
+                            String nm = m.name(); FontMetrics fm = g2.getFontMetrics(); int max = getWidth() - 110 - 150;
+                            while (fm.stringWidth(nm) > max && nm.length() > 3) nm = nm.substring(0, nm.length() - 2) + "…";
+                            g2.drawString(nm, 110, 20);
+                            g2.setFont(Theme.body(12f)); g2.setColor(t.muted); fm = g2.getFontMetrics();
+                            String ex = (m.exchange() + " · " + m.type()).replaceAll("^ · ", "");
+                            g2.drawString(ex, getWidth() - fm.stringWidth(ex) - 12, 20); g2.dispose();
+                        }
+                    };
+                    it.setPreferredSize(new Dimension(520, 30));
+                    it.addActionListener(e -> { hideSuggest(); typing = false; symField.setText(m.symbol()); typing = true; analyze(m.symbol(), false); });
+                    suggest.add(it);
+                }
+                suggest.pack();
+                Component row = symField.getParent();
+                int right = row != null ? row.getWidth() - symField.getX() : symField.getWidth();
+                suggest.show(symField, right - suggest.getPreferredSize().width, symField.getHeight() + 4);
+                symField.requestFocusInWindow();
             }
         }.execute();
     }
-    private void downloadHelp(String sym, String why) {
-        Object[] opts = {"Load price file…", "Open Stooq", "Open Nasdaq", "Cancel"};
-        int r = JOptionPane.showOptionDialog(app, why + "\n\nYou can download " + sym + "'s daily price file in your browser and load it here.", "Prices for " + sym,
-            JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, opts, opts[0]);
-        if (r == 0) loadFile(sym);
-        else if (r == 1) browse(PriceDownloader.stooqUrl(sym));
-        else if (r == 2) browse(PriceDownloader.nasdaqUrl(sym));
-    }
-    private void browse(String url) {
-        try { Desktop.getDesktop().browse(URI.create(url)); }
-        catch (Exception ex) { JOptionPane.showMessageDialog(app, "Open this address in your browser:\n" + url); }
-    }
+
     private void loadFile() { loadFile(null); }
     private void loadFile(String sym) {
         JFileChooser fc = new JFileChooser(); fc.setDialogTitle("Load a daily price file (.csv)");

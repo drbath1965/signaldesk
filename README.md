@@ -8,7 +8,7 @@ It comes in two versions that share the same calculations and data format:
 |---|---|---|
 | Runs as | `SignalDesk.jar`, Java 17+ | One HTML page, published as a claude.ai artifact |
 | Your data | `SignalDesk/studio.json` in your home folder, saved automatically, with daily backups | Your claude.ai account |
-| Stock prices | Downloads daily prices from Stooq | Load a price file you download |
+| Stock prices | Downloads automatically from Yahoo Finance: pick a stock and it charts, refreshing every 5 minutes | Load a price file you download |
 
 ![Overview](docs/overview.png)
 
@@ -51,15 +51,19 @@ desktop/src/com/signaldesk/
   model/            data model; JSON shape matches the web version's backup format
   calc/             budget, bills, debt, net worth, portfolio, retirement and attention-list engines
   signals/          price-file parsing and the buy/sell signal engine
-  store/            file storage, daily backups, price files, Stooq downloads, example data
+  store/            file storage, daily backups, saved prices, Yahoo Finance downloads and symbol search, example data
   ui/               Swing window, theme (light and dark), widgets, editable tables, charts
   ui/views/         one class per section
 desktop/res/fonts/  Inter and DejaVu Sans Mono, bundled so the app looks the same everywhere (licenses included)
-desktop/test/       Parity (checks numbers), Roundtrip (save and reload), Shots (renders each section to PNG)
+desktop/test/       Parity (checks numbers), Roundtrip (save and reload), Shots (renders each section to PNG),
+                    AutoPrices + mock/yahoo_mock.py (end-to-end price download against a local stand-in server)
 ```
 
 ### Moving data between versions
 In the web version, use **Backup & data → Export backup**. In the desktop app, use **Backup & data → Restore from backup** and pick that file. The two versions do not sync automatically.
+
+### Stock prices
+Type a ticker (MSFT) or a company name (Microsoft) on the Stock signals page and pick a match. Five years of daily prices download from Yahoo Finance's public chart service, are saved in `SignalDesk/prices`, and chart right away. While the page is open they refresh every 5 minutes, and holdings on the Investments page update when the app opens. No account or API key is needed. If the service can't be reached, the last saved prices are shown. Yahoo's service is free but unofficial, so it can change without notice.
 
 ## Web version
 `web/index.html` is the published page. It runs inside claude.ai, where it saves to your account.

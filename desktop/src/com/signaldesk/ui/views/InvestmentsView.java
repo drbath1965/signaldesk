@@ -6,6 +6,7 @@ import com.signaldesk.signals.*;
 import com.signaldesk.store.PriceDownloader;
 import com.signaldesk.ui.*;
 import com.signaldesk.ui.EditTable.Col;
+import com.signaldesk.ui.PriceService;
 import java.awt.Color;
 import java.util.*;
 import javax.swing.*;
@@ -16,6 +17,7 @@ public final class InvestmentsView extends View {
     private EditTable<String> alloc;
     private final Slot donut = new Slot();
     private JLabel targetSum;
+    private final JLabel priceStatus = Ui.text(" ", Theme.body(12.5f), Theme.T.muted);
 
     public InvestmentsView(MainFrame app) { super(app); }
 
@@ -31,8 +33,9 @@ public final class InvestmentsView extends View {
         Theme t = Theme.T;
         Ui.VBox root = new Ui.VBox(20);
         Ui.HBox actions = new Ui.HBox(8);
-        actions.add(Ui.btn("Update prices", this::updatePrices));
-        root.add(Kit.head("Investments", "Portfolio", "Enter what you hold. Update prices downloads the latest close for each symbol, which also powers its buy/sell signal.", actions));
+        actions.add(priceStatus);
+        actions.add(Ui.btn("Refresh prices", () -> { app.priceService().refreshHoldings(true, null); refresh(); }));
+        root.add(Kit.head("Investments", "Portfolio", "Enter what you hold. Prices update automatically from Yahoo Finance when the app opens and every 15 minutes you're here, and they power each holding's buy/sell signal.", actions));
         root.add(top);
 
         targetSum = Ui.text("", Theme.body(12.5f), Theme.T.muted);
@@ -71,9 +74,11 @@ public final class InvestmentsView extends View {
         });
         hc.add(holdings.wrap());
         hc.add(Ui.small("+ Add holding", () -> { s().holdings.add(new Holding("", "US stocks", 0, 0, 0)); app.changed(); app.rebuild(); }), false);
-        hc.add(Ui.hint("Click a signal to open that symbol under Stock signals. For cash or money-market funds, use price 1."));
+        hc.add(Ui.hint("Prices fill in on their own; you can still type one over. Click a signal to chart that stock. For cash or money-market funds, use price 1."));
         root.add(hc);
         refresh();
+        boolean stale = s().holdings.stream().anyMatch(h -> !h.sym.isBlank() && !"Cash".equals(h.cls) && !app.prices().isFresh(h.sym));
+        if (stale) SwingUtilities.invokeLater(() -> { app.priceService().refreshHoldings(false, null); refresh(); });
         return root;
     }
     static String word(SignalEngine.Call c) { return switch (c) { case BUY -> "Buy"; case SELL -> "Sell"; case HOLD -> "Hold"; default -> "Wait"; }; }
@@ -102,31 +107,11 @@ public final class InvestmentsView extends View {
         double tsum = s().targets.values().stream().mapToDouble(Double::doubleValue).sum();
         if (targetSum != null) { targetSum.setText("Targets add up to " + Ui.fmtNum(tsum, 1) + "%"); targetSum.setForeground(Math.abs(tsum - 100) > .01 ? t.sell : t.muted); }
         if (holdings != null) holdings.refreshRows();
+        PriceService ps = app.priceService();
+        if (ps.holdingsBusy()) { priceStatus.setText("Updating prices…"); priceStatus.setForeground(t.accent); }
+        else if (ps.holdingsProblem() != null) { priceStatus.setText(ps.holdingsProblem()); priceStatus.setForeground(t.warn); }
+        else if (ps.holdingsUpdated() != null) { priceStatus.setText("Prices updated " + SignalsView.ago(ps.holdingsUpdated())); priceStatus.setForeground(t.muted); }
+        else priceStatus.setText(" ");
     }
 
-    private void updatePrices() {
-        List<Holding> todo = s().holdings.stream().filter(h -> !h.sym.isBlank() && !"Cash".equals(h.cls)).toList();
-        if (todo.isEmpty()) { app.toast("Add a holding with a symbol first.", null); return; }
-        app.toast("Downloading prices for " + todo.size() + " symbols…", null);
-        new SwingWorker<List<String>, Void>() {
-            final Map<String, Double> got = new HashMap<>();
-            @Override protected List<String> doInBackground() {
-                List<String> failed = new ArrayList<>();
-                for (String sym : new LinkedHashSet<>(todo.stream().map(h -> h.sym).toList())) {
-                    try { PriceSeries p = PriceDownloader.download(sym); app.prices().put(p); got.put(sym, p.last()); }
-                    catch (Exception ex) { failed.add(sym); }
-                }
-                return failed;
-            }
-            @Override protected void done() {
-                List<String> failed; try { failed = get(); } catch (Exception e) { failed = List.of("all"); }
-                for (Holding h : s().holdings) if (got.containsKey(h.sym)) h.price = Math.round(got.get(h.sym) * 100) / 100.0;
-                if (!got.isEmpty()) app.changed();
-                if (app.section().equals("investments")) app.rebuild();
-                if (failed.isEmpty()) app.toast("Prices updated to the latest close", null);
-                else if (got.isEmpty()) app.toast("Couldn't reach the price service. Check your internet connection, or load price files under Stock signals.", null);
-                else app.toast("Updated " + got.size() + ". No prices found for " + String.join(", ", failed) + ".", null);
-            }
-        }.execute();
-    }
 }
