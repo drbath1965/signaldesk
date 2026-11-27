@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javax.swing.SwingUtilities;
 
-/** Signal Desk finance studio: budget, bills, debt, net worth, retirement, investments, stock signals and backlog. */
+/** Signal Desk: research, rank and learn about stocks, ETFs, mutual funds and crypto, with a practice portfolio. */
 public final class App {
     public static void main(String[] args) {
         System.setProperty("awt.useSystemAAFontSettings", "on");
@@ -20,14 +20,20 @@ public final class App {
         PriceStore prices = new PriceStore(AppPaths.pricesDir());
         Studio studio; String note = null;
         if (store.exists()) {
-            try { studio = store.load(); }
+            try {
+                studio = store.load();
+                if (studio.fromV1) {
+                    Path keep = store.keepV1Copy();
+                    note = "Signal Desk 2.0 is about investing and learning. Budget, bills and the other household sections are gone; your old data file was kept as backups/" + keep.getFileName() + ". Your investment symbols are now your watchlist.";
+                }
+            }
             catch (Exception ex) {
                 Path bad = store.file().resolveSibling("studio-unreadable-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")) + ".json");
                 try { Files.move(store.file(), bad); } catch (Exception ignored) {}
-                studio = ExampleData.build();
+                studio = Studio.fresh();
                 note = "Your data file couldn't be read, so it was set aside as " + bad.getFileName() + ". Restore a backup from Backup & data.";
             }
-        } else studio = ExampleData.build();
+        } else studio = Studio.fresh();
         final Studio s = studio; final String n = note;
         SwingUtilities.invokeLater(() -> {
             Theme.install("dark".equals(s.theme));

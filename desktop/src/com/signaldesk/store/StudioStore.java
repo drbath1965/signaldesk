@@ -29,6 +29,14 @@ public final class StudioStore {
         catch (AtomicMoveNotSupportedException e) { Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING); }
     }
 
+    /** Copies a version 1 data file into backups before it's first saved in the new format. Returns the copy. */
+    public Path keepV1Copy() throws IOException {
+        Path dir = AppPaths.backupsDir(); Files.createDirectories(dir);
+        Path out = dir.resolve("studio-v1-" + LocalDate.now() + ".json");
+        if (!Files.exists(out)) Files.copy(file, out);
+        return out;
+    }
+
     /** Keeps one automatic copy per day in the backups folder, and the last 14 of them. */
     public void dailyBackup() {
         try {
@@ -46,7 +54,7 @@ public final class StudioStore {
 
     public static void exportTo(Studio s, Path out) throws IOException {
         java.util.Map<String, Object> wrap = new java.util.LinkedHashMap<>();
-        wrap.put("app", "signal-desk-finance-studio"); wrap.put("exported", java.time.Instant.now().toString()); wrap.put("state", s.toJson());
+        wrap.put("app", "signal-desk"); wrap.put("exported", java.time.Instant.now().toString()); wrap.put("state", s.toJson());
         Files.writeString(out, Json.write(wrap), StandardCharsets.UTF_8);
     }
     /** Reads a backup from this app or from the web studio's "Export backup". */
@@ -54,7 +62,8 @@ public final class StudioStore {
         Object root = Json.parse(Files.readString(in, StandardCharsets.UTF_8));
         java.util.Map<String, Object> m = Json.obj(root);
         java.util.Map<String, Object> st = m.get("state") instanceof java.util.Map ? Json.obj(m, "state") : m;
-        if (!st.containsKey("budget") && !st.containsKey("bills")) throw new IOException("That file is not a Signal Desk backup.");
+        if (!st.containsKey("watchlist") && !st.containsKey("practice") && !st.containsKey("budget") && !st.containsKey("bills"))
+            throw new IOException("That file is not a Signal Desk backup.");
         return Studio.from(m);
     }
 }

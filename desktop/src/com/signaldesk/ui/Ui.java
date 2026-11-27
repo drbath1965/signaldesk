@@ -198,7 +198,7 @@ public final class Ui {
             setFont(kind == Kind.LINK ? Theme.medium(sm ? 12.5f : 13f) : Theme.semibold(sm ? 12.5f : 13.5f));
             setContentAreaFilled(false); setBorderPainted(false); setFocusPainted(false); setOpaque(false);
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            setBorder(kind == Kind.LINK ? new EmptyBorder(0, 0, 0, 0) : sm ? new EmptyBorder(4, 10, 4, 10) : new EmptyBorder(7, 14, 7, 14));
+            setBorder(kind == Kind.LINK ? new EmptyBorder(0, 0, 0, 4) : sm ? new EmptyBorder(4, 10, 4, 10) : new EmptyBorder(7, 14, 7, 14));
             addMouseListener(new MouseAdapter() {
                 @Override public void mouseEntered(MouseEvent e) { hover = true; repaint(); }
                 @Override public void mouseExited(MouseEvent e) { hover = false; repaint(); }

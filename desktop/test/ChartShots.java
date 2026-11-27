@@ -13,7 +13,7 @@ public class ChartShots {
   public static void main(String[] a) throws Exception {
     String out = a[0];
     StudioStore store = new StudioStore(AppPaths.studioFile()); PriceStore prices = new PriceStore(AppPaths.pricesDir());
-    Studio s = ExampleData.build();
+    Studio s = Studio.fresh();
     SwingUtilities.invokeAndWait(() -> Theme.install(a.length > 1 && a[1].equals("dark")));
     MainFrame[] f = new MainFrame[1];
     SwingUtilities.invokeAndWait(() -> { f[0] = new MainFrame(s, store, prices, null); f[0].setSize(1440, 960); f[0].setVisible(true); });

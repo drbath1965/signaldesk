@@ -1,7 +1,5 @@
 package com.signaldesk.ui;
 
-import com.signaldesk.calc.Dates;
-import com.signaldesk.calc.NetWorth;
 import com.signaldesk.model.BacklogItem;
 import com.signaldesk.model.Studio;
 import com.signaldesk.store.*;
@@ -24,16 +22,15 @@ public final class MainFrame extends JFrame {
     public static final String VERSION = java.util.Optional.ofNullable(MainFrame.class.getPackage().getImplementationVersion()).orElse("dev");
     private static final Map<String, String> SECTIONS = new LinkedHashMap<>();
     static {
-        SECTIONS.put("overview", "Overview"); SECTIONS.put("budget", "Budget"); SECTIONS.put("bills", "Bills");
-        SECTIONS.put("debt", "Debt payoff"); SECTIONS.put("networth", "Net worth"); SECTIONS.put("retirement", "Retirement");
-        SECTIONS.put("investments", "Investments"); SECTIONS.put("signals", "Stock signals"); SECTIONS.put("backlog", "Backlog");
+        SECTIONS.put("markets", "Markets"); SECTIONS.put("research", "Research"); SECTIONS.put("picks", "Picks");
+        SECTIONS.put("practice", "Practice"); SECTIONS.put("learn", "Learn"); SECTIONS.put("backlog", "Backlog");
     }
 
     private Studio studio;
     private final StudioStore store;
     private final PriceStore prices;
     private final Timer saveTimer;
-    private String section = "overview";
+    private String section = "markets";
     private View current;
     private final JPanel sidebar = new JPanel(new BorderLayout());
     private final ScrollPage page = new ScrollPage();
@@ -42,7 +39,7 @@ public final class MainFrame extends JFrame {
     private JLabel saveLabel;
     private Timer toastTimer;
     private String saveState = "";
-    private String pendingSymbol;
+    private String pendingArg;
     private final PriceService priceService = new PriceService(this);
 
     public MainFrame(Studio studio, StudioStore store, PriceStore prices, String loadNote) {
@@ -59,11 +56,11 @@ public final class MainFrame extends JFrame {
         setSize(new Dimension(1400, 900));
         setLocationRelativeTo(null);
         installShortcuts();
-        navigate("overview");
-        saveState = store.exists() ? "Saved" : studio.example ? "Example data, not saved yet" : "Not saved yet";
+        navigate("markets");
+        saveState = store.exists() ? "Saved" : "Not saved yet";
         updateSaveLabel();
         if (loadNote != null) SwingUtilities.invokeLater(() -> toast(loadNote, null));
-        if (!Boolean.getBoolean("signaldesk.offline")) SwingUtilities.invokeLater(() -> priceService.refreshHoldings(false, null));
+        if (!Boolean.getBoolean("signaldesk.offline")) SwingUtilities.invokeLater(() -> priceService.refreshEveryday(false, null));
     }
 
     // ------------------------------------------------------------------ public API for views
@@ -73,29 +70,16 @@ public final class MainFrame extends JFrame {
     public String section() { return section; }
     public PriceService priceService() { return priceService; }
 
-    /** New prices arrived for holdings: save (unless showing the example) and redraw computed parts. */
-    public void pricesUpdated() {
-        studio.nwHist.put(Dates.cur(), (double) Math.round(NetWorth.of(studio).net()));
-        if (!studio.example) { saveState = "Saving…"; updateSaveLabel(); saveTimer.restart(); }
-        refreshCurrent();
-    }
     /** Redraw the current section's computed parts without touching inputs. */
-    public void refreshCurrent() {
-        if (current instanceof OverviewView) rebuild();
-        else if (current != null) current.refresh();
-    }
+    public void refreshCurrent() { if (current != null) current.refresh(); }
 
-    /** Call after any edit: drops the example flag, records net worth, schedules a save, refreshes computed parts. */
+    /** Call after any edit: schedules a save and refreshes computed parts. */
     public void changed() {
-        boolean wasExample = studio.example;
-        studio.example = false;
-        studio.nwHist.put(Dates.cur(), (double) Math.round(NetWorth.of(studio).net()));
         saveState = "Saving…"; updateSaveLabel();
         saveTimer.restart();
-        if (wasExample) rebuildBanner();
         if (current != null) current.refresh();
     }
-    /** Replace all data (restore, example, erase) and redraw. */
+    /** Replace all data (restore, start over) and redraw. */
     public void replaceStudio(Studio s, boolean save) {
         this.studio = s;
         if (save) { saveState = "Saving…"; saveTimer.restart(); }
@@ -103,34 +87,30 @@ public final class MainFrame extends JFrame {
         updateSaveLabel();
     }
     public void navigate(String key) {
-        if (!SECTIONS.containsKey(key) && !key.equals("data")) key = "overview";
+        if (!SECTIONS.containsKey(key) && !key.equals("data")) key = "markets";
         section = key;
+        String arg = pendingArg; pendingArg = null;
         current = switch (key) {
-            case "budget" -> new BudgetView(this);
-            case "bills" -> new BillsView(this);
-            case "debt" -> new DebtView(this);
-            case "networth" -> new NetWorthView(this);
-            case "retirement" -> new RetirementView(this);
-            case "investments" -> new InvestmentsView(this);
-            case "signals" -> new SignalsView(this, consumePendingSymbol());
+            case "research" -> new ResearchView(this, arg);
+            case "picks" -> new PicksView(this);
+            case "practice" -> new PracticeView(this, arg);
+            case "learn" -> new LearnView(this, arg);
             case "backlog" -> new BacklogView(this);
             case "data" -> new DataView(this);
-            default -> new OverviewView(this);
+            default -> new MarketsView(this);
         };
         page.removeAll();
-        Ui.VBox v = new Ui.VBox(20);
-        v.add(bannerSlot);
-        v.add(current.build());
-        v.end();
-        page.add(v, BorderLayout.CENTER);
-        rebuildBanner();
+        page.add(current.build(), BorderLayout.CENTER);
         buildSidebar();
         page.revalidate(); page.repaint();
         SwingUtilities.invokeLater(() -> scroll.getVerticalScrollBar().setValue(0));
     }
-    /** Open Stock signals on a given symbol. */
-    public void analyze(String sym) { pendingSymbol = sym; navigate("signals"); }
-    private String consumePendingSymbol() { String s = pendingSymbol; pendingSymbol = null; return s; }
+    /** Open Research on a symbol. */
+    public void analyze(String sym) { pendingArg = sym; navigate("research"); }
+    /** Open Practice with a trade ticket for a symbol. */
+    public void trade(String sym) { pendingArg = sym; navigate("practice"); }
+    /** Open Learn on a lesson ("lesson:id") or a glossary search ("term:text"). */
+    public void learn(String what) { pendingArg = what; navigate("learn"); }
     /** Re-render the current section without changing data (e.g. after a structural edit). */
     public void rebuild() {
         int y = scroll.getVerticalScrollBar().getValue();
@@ -164,14 +144,13 @@ public final class MainFrame extends JFrame {
         JPanel center = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0)); center.setOpaque(false); center.add(pill);
         toastBar.add(center); toastBar.setVisible(true); toastBar.revalidate(); toastBar.repaint();
         if (toastTimer != null) toastTimer.stop();
-        toastTimer = new Timer(undo != null ? 7000 : 3600, e -> hideToast()); toastTimer.setRepeats(false); toastTimer.start();
+        toastTimer = new Timer(undo != null ? 7000 : Math.max(3600, msg.length() * 70), e -> hideToast()); toastTimer.setRepeats(false); toastTimer.start();
     }
     private void hideToast() { toastBar.setVisible(false); toastUndo = null; }
 
     // ------------------------------------------------------------------ saving
     public void saveNow() {
         saveTimer.stop();
-        if (studio.example) { saveState = "Example data, not saved yet"; updateSaveLabel(); return; }
         try { store.save(studio); saveState = "Saved"; store.dailyBackup(); }
         catch (Exception ex) { saveState = "Couldn't save: " + ex.getMessage(); }
         updateSaveLabel();
@@ -184,30 +163,6 @@ public final class MainFrame extends JFrame {
     }
 
     // ------------------------------------------------------------------ shell
-    private final View.Slot bannerSlot = new View.Slot();
-    private void rebuildBanner() {
-        if (!studio.example) { bannerSlot.set(new JPanel() {{ setOpaque(false); setPreferredSize(new Dimension(0, 0)); }}); return; }
-        Theme t = Theme.T;
-        Ui.HBox h = new Ui.HBox(16);
-        Ui.VBox txt = new Ui.VBox(2);
-        txt.add(Ui.text("You're looking at example numbers.", Theme.semibold(14f), t.ink));
-        txt.add(Ui.text("Edit any value to make this studio yours, or start from a blank slate. Your backlog carries over either way.", Theme.body(13f), t.muted));
-        h.grow(txt);
-        h.add(Ui.primary("Start with my own numbers", () -> {
-            Studio b = Studio.blank(); b.backlog.addAll(studio.backlog);
-            replaceStudio(b, true); toast("Started a blank studio. Add your own numbers.", null);
-        }));
-        JPanel band = new JPanel(new BorderLayout()) {
-            @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = Ui.aa(g); g2.setColor(Theme.T.panel); g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
-                g2.setColor(Theme.T.line); g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
-                g2.setColor(Theme.T.slow); g2.fillRoundRect(0, 0, 8, getHeight() - 1, 8, 8); g2.fillRect(4, 0, 4, getHeight() - 1); g2.dispose();
-            }
-        };
-        band.setOpaque(false); band.setBorder(new EmptyBorder(11, 20, 11, 14)); band.add(h);
-        bannerSlot.set(band);
-    }
-
     private void buildShell() {
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(Theme.T.paper);
@@ -236,7 +191,7 @@ public final class MainFrame extends JFrame {
         Ui.VBox top = new Ui.VBox(2);
         Ui.VBox brand = new Ui.VBox(0);
         brand.add(Ui.text("Signal Desk", Theme.display(26f), t.ink));
-        brand.add(Ui.text("FINANCE STUDIO", Theme.caps(11f), t.muted));
+        brand.add(Ui.text("INVEST · RESEARCH · LEARN", Theme.caps(11f), t.muted));
         brand.setBorder(new EmptyBorder(0, 8, 18, 0));
         top.add(brand);
         int k = 1;
@@ -248,7 +203,7 @@ public final class MainFrame extends JFrame {
         foot.add(Ui.seg(new String[]{"Light", "Dark"}, t.dark ? 1 : 0, i -> setDark(i == 1)), false);
         saveLabel = Ui.text("", Theme.body(12f), t.muted);
         Ui.HBox st = new Ui.HBox(7);
-        st.add(Ui.dot(saveState.startsWith("Couldn't") ? t.sell : studio.example ? t.warn : t.buy));
+        st.add(Ui.dot(saveState.startsWith("Couldn't") ? t.sell : t.buy));
         st.grow(saveLabel);
         foot.add(st);
         foot.add(Ui.link("Backup & data", () -> navigate("data")), false);
@@ -290,7 +245,7 @@ public final class MainFrame extends JFrame {
         SwingUtilities.updateComponentTreeUI(this);
         buildShell();
         navigate(section);
-        if (!studio.example) { saveTimer.restart(); }
+        saveTimer.restart();
     }
 
     private void installShortcuts() {

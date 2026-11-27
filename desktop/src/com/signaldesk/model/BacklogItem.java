@@ -20,7 +20,7 @@ public final class BacklogItem {
         public static Priority of(String k) { for (Priority p : values()) if (p.key.equals(k)) return p; return MED; }
         @Override public String toString() { return label; }
     }
-    public static final String[] AREAS = {"Stock signals", "Investments", "Budget", "Bills", "Debt payoff", "Net worth", "Retirement", "Studio", "Training"};
+    public static final String[] AREAS = {"Markets", "Research", "Picks", "Practice", "Learn", "Studio"};
 
     public String id = Ids.next();
     public String title = "", detail = "", area = "Studio", created = "", doneAt = "";

@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-/** End-to-end: holdings refresh on launch, then type a company name, pick a suggestion, and the chart appears. */
+/** End-to-end: watchlist and indexes refresh on launch, then type a company name, pick a suggestion, and the chart appears. */
 public class AutoPrices {
   static Component find(Container c, java.util.function.Predicate<Component> p) { for (Component x : c.getComponents()) { if (p.test(x)) return x; if (x instanceof Container cc) { Component r = find(cc, p); if (r != null) return r; } } return null; }
   public static void main(String[] a) throws Exception {
@@ -19,13 +19,14 @@ public class AutoPrices {
     System.out.println("search 'micro' -> " + PriceDownloader.search("micro"));
     // UI flow
     StudioStore store = new StudioStore(AppPaths.studioFile()); PriceStore prices = new PriceStore(AppPaths.pricesDir());
-    Studio s = ExampleData.build(); s.example = false;
+    Studio s = Studio.fresh();
     SwingUtilities.invokeAndWait(() -> Theme.install(false));
     MainFrame[] f = new MainFrame[1];
     SwingUtilities.invokeAndWait(() -> { f[0] = new MainFrame(s, store, prices, null); f[0].setSize(1440, 960); f[0].setVisible(true); });
     Thread.sleep(4000);
-    System.out.println("after launch: VTI price=" + s.holdings.get(0).price + " fresh=" + prices.isFresh("VTI") + " MSFT=" + s.holdings.get(4).price);
-    SwingUtilities.invokeAndWait(() -> f[0].navigate("signals"));
+    System.out.println("after launch: fresh AAPL=" + prices.isFresh("AAPL") + " VFIAX=" + prices.isFresh("VFIAX") + " BTC-USD=" + prices.isFresh("BTC-USD") + " ^GSPC=" + prices.isFresh("^GSPC")
+      + " types: " + prices.type("VOO") + "/" + prices.type("VFIAX") + "/" + prices.type("BTC-USD") + "/" + prices.type("^GSPC") + "/" + prices.type("AAPL"));
+    SwingUtilities.invokeAndWait(() -> f[0].navigate("research"));
     Thread.sleep(500);
     JTextField[] fld = new JTextField[1];
     SwingUtilities.invokeAndWait(() -> { fld[0] = (JTextField) find(f[0].getContentPane(), c -> c instanceof JTextField t && t.getFont().getSize() == 18); fld[0].requestFocusInWindow(); });

@@ -44,6 +44,12 @@ public final class PriceStore {
         catch (Exception e) { return null; }
     }
     public synchronized String name(String sym) { return Json.str(Json.obj(index().get(clean(sym))), "name", ""); }
+    /** Stock, ETF, fund, crypto or index: from the price service when known, otherwise from the symbol's shape. */
+    public synchronized com.signaldesk.signals.AssetType type(String sym) {
+        String t = Json.str(Json.obj(index().get(clean(sym))), "type", null);
+        try { if (t != null) return com.signaldesk.signals.AssetType.valueOf(t); } catch (Exception ignored) {}
+        return com.signaldesk.signals.AssetType.guess(clean(sym));
+    }
     /** When this symbol's prices were last downloaded, or null if never. */
     public synchronized Instant fetchedAt(String sym) {
         String t = Json.str(Json.obj(index().get(clean(sym))), "fetched", null);
@@ -56,7 +62,8 @@ public final class PriceStore {
     }
 
     public synchronized void put(PriceSeries s) throws IOException { put(s, null, Instant.now()); }
-    public synchronized void put(PriceSeries s, String name, Instant fetched) throws IOException {
+    public synchronized void put(PriceSeries s, String name, Instant fetched) throws IOException { put(s, name, fetched, null); }
+    public synchronized void put(PriceSeries s, String name, Instant fetched, String type) throws IOException {
         Files.createDirectories(dir);
         Path f = fileFor(s.symbol()), tmp = f.resolveSibling(f.getFileName() + ".tmp");
         Files.writeString(tmp, PriceCsv.write(s), StandardCharsets.UTF_8);
@@ -65,6 +72,7 @@ public final class PriceStore {
         cache.put(s.symbol(), s);
         Map<String, Object> e = new LinkedHashMap<>(Json.obj(index().get(s.symbol())));
         if (name != null && !name.isBlank()) e.put("name", name);
+        if (type != null) e.put("type", type);
         e.put("fetched", fetched.toString());
         index().put(s.symbol(), e);
         Files.writeString(indexFile(), Json.write(index()), StandardCharsets.UTF_8);
@@ -72,6 +80,7 @@ public final class PriceStore {
     public Path file(String sym) { return fileFor(clean(sym)); }
     public Path folder() { return dir; }
     /** Symbols with saved prices, most recently updated first. */
+    public synchronized boolean has(String sym) { return java.nio.file.Files.exists(fileFor(clean(sym))); }
     public synchronized List<String> symbols() {
         if (!Files.isDirectory(dir)) return List.of();
         try (Stream<Path> st = Files.list(dir)) {

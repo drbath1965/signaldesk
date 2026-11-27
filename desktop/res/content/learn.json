@@ -1,0 +1,1235 @@
+{
+ "lessons": [
+  {
+   "id": "stocks",
+   "level": "Basics",
+   "title": "What you own when you buy a stock",
+   "minutes": 4,
+   "summary": "A share is a small slice of a business. Its price moves with what investors expect that business to earn.",
+   "sections": [
+    {
+     "h": "A slice of a company",
+     "p": "A company is divided into shares. Buying one share makes you a part-owner: you share in its profits, usually through dividends or through the company growing in value, and you share in its losses. If a business has 1 billion shares and you own 100, you own one ten-millionth of it."
+    },
+    {
+     "h": "Why prices move",
+     "p": "A stock price is the most recent price at which a buyer and a seller agreed to trade. It moves all day as expectations change: a strong earnings report, a new product, rising interest rates or a general mood swing in the market can all shift what people will pay. Over long periods, prices tend to follow how much the company actually earns. Over days and weeks, they mostly follow sentiment."
+    },
+    {
+     "h": "Two ways to make money",
+     "p": "You can earn from a stock in two ways. Price growth: you sell for more than you paid. Dividends: cash the company pays out of profits, often every quarter. Total return counts both. The charts in Signal Desk use adjusted prices, which fold dividends and stock splits back in, so the line you see is total return."
+    },
+    {
+     "h": "Market value",
+     "p": "Market capitalization is the share price times the number of shares. It's the price tag the market puts on the whole company. Large companies tend to move less dramatically than small ones, though there are plenty of exceptions."
+    }
+   ],
+   "takeaways": [
+    "A share is part-ownership of a business.",
+    "Short-term moves follow expectations; long-term moves follow earnings.",
+    "Total return = price change + dividends."
+   ],
+   "quiz": [
+    {
+     "q": "You own 50 shares of a company that has 500 million shares. What do you own?",
+     "options": [
+      "One ten-millionth of the company",
+      "50% of the company's profits",
+      "A loan to the company"
+     ],
+     "answer": 0,
+     "why": "50 ÷ 500,000,000 = 1/10,000,000. Shares are ownership, not a loan; a loan would be a bond."
+    },
+    {
+     "q": "What does 'total return' include?",
+     "options": [
+      "Only the change in share price",
+      "Price change plus dividends",
+      "Dividends minus taxes"
+     ],
+     "answer": 1,
+     "why": "Total return adds dividends to price change. Adjusted prices on Signal Desk's charts already include them."
+    },
+    {
+     "q": "Over many years, what tends to drive a company's stock price?",
+     "options": [
+      "How often it appears in the news",
+      "How much the business earns",
+      "The number of shares it has"
+     ],
+     "answer": 1,
+     "why": "Day to day, sentiment dominates. Over long stretches prices tend to track earnings."
+    }
+   ],
+   "terms": [
+    "Stock",
+    "Share",
+    "Dividend",
+    "Total return",
+    "Market capitalization",
+    "Adjusted price"
+   ]
+  },
+  {
+   "id": "funds",
+   "level": "Basics",
+   "title": "Funds: ETFs and mutual funds",
+   "minutes": 5,
+   "summary": "A fund pools money from many investors to buy a basket of investments, so one purchase spreads your money widely.",
+   "sections": [
+    {
+     "h": "Buying a basket",
+     "p": "Instead of picking individual companies, a fund lets you buy hundreds or thousands at once. An S&P 500 fund, for example, holds the 500 large US companies in that index in proportion to their size. When you buy one share of the fund, you indirectly own a sliver of all of them."
+    },
+    {
+     "h": "Index funds and active funds",
+     "p": "An index fund copies a published list of investments and changes only when the list changes. An actively managed fund has managers who pick what to buy, trying to beat an index. Index funds usually cost much less. Over long periods, most active funds trail the index they compete with once their higher fees are counted."
+    },
+    {
+     "h": "ETFs",
+     "p": "An exchange-traded fund trades on a stock exchange like a single stock: its price moves through the day and you can buy or sell any time the market is open. Symbols look like stock symbols (VOO, QQQ, BND). Most ETFs track an index."
+    },
+    {
+     "h": "Mutual funds",
+     "p": "A mutual fund is bought from and sold back to the fund company itself, once a day, at the closing value of its holdings (the net asset value). There's no price during the day. Many US mutual fund symbols are five letters ending in X, such as VFIAX. Signal Desk shows one price per day for them."
+    },
+    {
+     "h": "What's inside matters",
+     "p": "Funds hold different things: US stocks, international stocks, bonds, gold, real estate, a single industry. A bond fund like BND behaves very differently from a technology fund like XLK. Always check what a fund owns before comparing its return or risk to anything else."
+    }
+   ],
+   "takeaways": [
+    "A fund buys a basket for you in one purchase.",
+    "ETFs trade all day; mutual funds price once a day.",
+    "Low-cost index funds are hard to beat over long periods."
+   ],
+   "quiz": [
+    {
+     "q": "What makes an ETF different from a mutual fund?",
+     "options": [
+      "ETFs can only hold bonds",
+      "ETFs trade on an exchange throughout the day",
+      "ETFs are always actively managed"
+     ],
+     "answer": 1,
+     "why": "ETFs trade like stocks during market hours. Mutual funds are priced once a day at net asset value."
+    },
+    {
+     "q": "Why do index funds often beat active funds over time?",
+     "options": [
+      "They hold riskier companies",
+      "Their much lower costs leave more return for investors",
+      "They are guaranteed by the government"
+     ],
+     "answer": 1,
+     "why": "Most of the gap comes from fees: an active fund must beat the index by more than its extra costs just to match it."
+    },
+    {
+     "q": "You compare a bond fund's return to a tech stock fund's return. What's the catch?",
+     "options": [
+      "Nothing; returns are always comparable",
+      "They hold very different things with different risks",
+      "Bond funds can't be compared to anything"
+     ],
+     "answer": 1,
+     "why": "Return only means something next to risk and what's inside. Bonds usually swing far less than stocks."
+    }
+   ],
+   "terms": [
+    "Fund",
+    "Index fund",
+    "ETF",
+    "Mutual fund",
+    "Net asset value",
+    "Expense ratio",
+    "Bond",
+    "Index"
+   ]
+  },
+  {
+   "id": "crypto",
+   "level": "Basics",
+   "title": "Crypto: what's different",
+   "minutes": 5,
+   "summary": "Cryptocurrencies trade around the clock, swing far more than stocks, and have no earnings behind them.",
+   "sections": [
+    {
+     "h": "What a coin is",
+     "p": "A cryptocurrency is a digital token recorded on a shared public ledger called a blockchain. Bitcoin was the first; Ether runs the Ethereum network, which also hosts other applications. Signal Desk shows coins priced in US dollars, such as BTC-USD."
+    },
+    {
+     "h": "Nothing to earn",
+     "p": "A company earns profits; a bond pays interest. Most coins produce neither. Their price depends entirely on what the next buyer will pay, driven by adoption, scarcity, regulation and sentiment. That makes them very hard to value and prone to manias and crashes."
+    },
+    {
+     "h": "Bigger swings",
+     "p": "Bitcoin has fallen by more than 70% from a peak several times and recovered; many smaller coins fell and never came back. Typical yearly volatility for large coins runs two to four times that of the S&P 500. Signal Desk's score rates this in its Risk part, which is why crypto rarely scores high on Risk."
+    },
+    {
+     "h": "Always open",
+     "p": "Crypto trades 24 hours a day, every day, including weekends. A year has about 365 price days instead of about 252 for stocks. Signal Desk accounts for this when it annualizes returns and volatility."
+    },
+    {
+     "h": "Practical cautions",
+     "p": "Exchanges can fail, and lost passwords or keys can mean lost coins. If you own crypto, size the position so a deep fall wouldn't change your life, and never treat it like cash savings."
+    }
+   ],
+   "takeaways": [
+    "Most coins have no earnings or interest behind them.",
+    "Expect swings several times larger than stocks.",
+    "Crypto trades every day of the year."
+   ],
+   "quiz": [
+    {
+     "q": "Why is it hard to say what a cryptocurrency is 'worth'?",
+     "options": [
+      "Its price is set by a central bank",
+      "It produces no earnings or interest to value",
+      "It only trades once a day"
+     ],
+     "answer": 1,
+     "why": "Without cash flows, value rests entirely on what others will pay."
+    },
+    {
+     "q": "About how many trading days does crypto have in a year?",
+     "options": [
+      "About 252",
+      "About 365",
+      "About 52"
+     ],
+     "answer": 1,
+     "why": "Crypto never closes, so every calendar day has a price."
+    },
+    {
+     "q": "What's a sensible way to hold a very volatile asset?",
+     "options": [
+      "Put most of your savings in it",
+      "Keep the position small enough that a deep fall wouldn't hurt your life",
+      "Buy more whenever it drops, without limit"
+     ],
+     "answer": 1,
+     "why": "Position size is the main control you have over risk."
+    }
+   ],
+   "terms": [
+    "Cryptocurrency",
+    "Blockchain",
+    "Volatility",
+    "Drawdown"
+   ]
+  },
+  {
+   "id": "returns",
+   "level": "Returns & risk",
+   "title": "Returns and compounding",
+   "minutes": 5,
+   "summary": "Gains build on gains. Small differences in yearly return grow into large differences over decades.",
+   "sections": [
+    {
+     "h": "Simple return",
+     "p": "Return is the change in value divided by where you started. Buy at $100, now worth $112: a 12% return. Losses work the same way: $100 to $85 is a −15% return."
+    },
+    {
+     "h": "Compounding",
+     "p": "When gains stay invested, next year's return applies to a bigger amount. $10,000 growing 7% a year becomes about $19,700 in 10 years and about $76,000 in 30 years. The last decade adds far more dollars than the first, even though the rate never changed."
+    },
+    {
+     "h": "Annualized return",
+     "p": "To compare periods of different lengths, returns are annualized: the steady yearly rate that would have produced the same total. A 50% total gain over 5 years is about 8.4% a year, not 10%, because of compounding. Signal Desk shows 3- and 5-year returns this way."
+    },
+    {
+     "h": "Losses need bigger gains",
+     "p": "A 50% loss needs a 100% gain to get back to even. A 20% loss needs 25%. This lopsidedness is why limiting deep losses matters so much."
+    }
+   ],
+   "takeaways": [
+    "Return = change ÷ starting value.",
+    "Compounding makes time your strongest tool.",
+    "Annualized return lets you compare different periods.",
+    "Big losses need much bigger gains to recover."
+   ],
+   "quiz": [
+    {
+     "q": "An investment falls 50%. What gain gets it back to where it started?",
+     "options": [
+      "50%",
+      "75%",
+      "100%"
+     ],
+     "answer": 2,
+     "why": "Half the money must double to recover: $50 → $100 is +100%."
+    },
+    {
+     "q": "A fund rose 50% over 5 years. Its annualized return is closest to:",
+     "options": [
+      "10% a year",
+      "8.4% a year",
+      "12% a year"
+     ],
+     "answer": 1,
+     "why": "1.5^(1/5) − 1 ≈ 8.4%. Compounding means you don't just divide by 5."
+    },
+    {
+     "q": "Why does the last decade of a 30-year investment add the most dollars?",
+     "options": [
+      "Markets always rise faster later",
+      "The same percentage applies to a much larger balance",
+      "Fees disappear after 20 years"
+     ],
+     "answer": 1,
+     "why": "That's compounding: the base keeps growing."
+    }
+   ],
+   "terms": [
+    "Return",
+    "Compounding",
+    "Annualized return (CAGR)",
+    "Total return"
+   ]
+  },
+  {
+   "id": "risk",
+   "level": "Returns & risk",
+   "title": "Risk: volatility and drawdowns",
+   "minutes": 6,
+   "summary": "Risk is how bumpy the ride is and how far you could fall. Higher expected returns usually come with more of both.",
+   "sections": [
+    {
+     "h": "Volatility",
+     "p": "Volatility measures how much prices swing around their average, usually as the yearly standard deviation of returns. A broad stock fund often runs around 15–20% a year; a single tech stock may be 30–50%; bitcoin often 50% or more; a broad bond fund 5–7%. Higher volatility means a wider range of outcomes, good and bad."
+    },
+    {
+     "h": "Drawdown",
+     "p": "A drawdown is the fall from a peak to a later low. The maximum drawdown is the worst such fall in a period. It answers a gut-level question: how much would I have been down at the worst moment? Volatility and drawdown together describe the ride."
+    },
+    {
+     "h": "Beta",
+     "p": "Beta compares an investment's moves with the overall market (Signal Desk uses the S&P 500). A beta of 1 moves about in step; 1.5 tends to move 50% more in both directions; 0.5 about half as much. Beta says nothing about whether something will go up, only how it tends to move with the market."
+    },
+    {
+     "h": "Risk and reward",
+     "p": "Investors demand a higher expected return to hold something bumpier. That doesn't mean bumpier things always pay more; it means they have to be expected to, or no one would hold them. Risk you can't stomach is risk you'll sell at the bottom, which turns a temporary drop into a permanent loss."
+    }
+   ],
+   "takeaways": [
+    "Volatility = how much prices swing.",
+    "Max drawdown = the worst fall from a peak.",
+    "Beta = how much it moves with the market.",
+    "Only take risk you can sit through."
+   ],
+   "quiz": [
+    {
+     "q": "A stock has a beta of 1.5. If the market falls 10%, a typical move for the stock is:",
+     "options": [
+      "Down about 15%",
+      "Up about 15%",
+      "Down about 1.5%"
+     ],
+     "answer": 0,
+     "why": "Beta of 1.5 means roughly 1.5× the market's move, in the same direction."
+    },
+    {
+     "q": "What does maximum drawdown measure?",
+     "options": [
+      "The average daily change",
+      "The worst fall from a peak to a later low",
+      "The difference between high and low on one day"
+     ],
+     "answer": 1,
+     "why": "It's the deepest hole you'd have been in."
+    },
+    {
+     "q": "Which usually has the lowest volatility?",
+     "options": [
+      "A single technology stock",
+      "Bitcoin",
+      "A broad bond fund"
+     ],
+     "answer": 2,
+     "why": "Broad bond funds typically swing far less than stocks or crypto."
+    }
+   ],
+   "terms": [
+    "Volatility",
+    "Standard deviation",
+    "Drawdown",
+    "Maximum drawdown",
+    "Beta",
+    "Risk tolerance"
+   ]
+  },
+  {
+   "id": "diversify",
+   "level": "Returns & risk",
+   "title": "Diversification",
+   "minutes": 4,
+   "summary": "Spreading money across many investments that don't all move together reduces risk without giving up much return.",
+   "sections": [
+    {
+     "h": "Don't depend on one outcome",
+     "p": "A single company can fail for reasons no one saw coming. Hundreds of companies across industries are very unlikely to fail together. Owning many lowers the chance that one bad surprise wrecks your results."
+    },
+    {
+     "h": "Correlation",
+     "p": "Diversification works best when holdings don't move in lockstep. Stocks in the same industry often rise and fall together. Bonds have often (not always) held up better when stocks fell. Adding something that zigs when others zag smooths the overall ride."
+    },
+    {
+     "h": "What diversification can't do",
+     "p": "In a broad market crash most stocks fall at once. Diversification reduces the risk of any single holding, not the risk of the market as a whole. That remaining market risk is what investors are paid to carry over time."
+    },
+    {
+     "h": "Concentration on purpose",
+     "p": "Some investors deliberately hold a few positions. That can win big or lose big. If you do it, know that you're betting on being right about those specific names."
+    }
+   ],
+   "takeaways": [
+    "Many holdings reduce single-company risk.",
+    "Holdings that don't move together diversify best.",
+    "Market-wide risk remains no matter how many stocks you own."
+   ],
+   "quiz": [
+    {
+     "q": "What kind of risk does owning hundreds of stocks reduce most?",
+     "options": [
+      "The risk that one company fails",
+      "The risk that the whole market falls",
+      "Inflation"
+     ],
+     "answer": 0,
+     "why": "Company-specific risk shrinks with more holdings; market risk remains."
+    },
+    {
+     "q": "Which pair likely diversifies better?",
+     "options": [
+      "Two oil companies",
+      "A stock fund and a bond fund",
+      "Two technology ETFs"
+     ],
+     "answer": 1,
+     "why": "Stocks and bonds have often moved differently; same-industry stocks tend to move together."
+    },
+    {
+     "q": "During a broad market crash, a diversified stock portfolio will usually:",
+     "options": [
+      "Rise, because diversification protects it",
+      "Fall along with the market",
+      "Stay perfectly flat"
+     ],
+     "answer": 1,
+     "why": "Diversification can't remove market-wide risk."
+    }
+   ],
+   "terms": [
+    "Diversification",
+    "Correlation",
+    "Asset allocation",
+    "Sector"
+   ]
+  },
+  {
+   "id": "costs",
+   "level": "Returns & risk",
+   "title": "Fees, costs and taxes",
+   "minutes": 4,
+   "summary": "Costs are one of the few things you control, and they compound against you just as returns compound for you.",
+   "sections": [
+    {
+     "h": "Expense ratios",
+     "p": "Funds charge a yearly fee as a percentage of what you hold. Broad index funds can cost 0.03% or less; many active funds charge 0.5% to 1% or more. On $100,000, that's the difference between $30 and $1,000 a year, every year."
+    },
+    {
+     "h": "How costs compound",
+     "p": "A 1% yearly fee on an investment earning 7% leaves 6%. Over 30 years, $10,000 grows to about $76,000 at 7% but about $57,000 at 6%: a quarter of the ending value gone to fees."
+    },
+    {
+     "h": "Trading costs",
+     "p": "Each trade has costs: commissions in some places, the bid–ask spread (the gap between buying and selling prices) everywhere, and taxes on gains when you sell in a taxable account. Frequent trading multiplies these. Signal Desk's backtest charges a cost per trade for this reason."
+    },
+    {
+     "h": "Taxes",
+     "p": "In many countries, gains held longer than a year are taxed at a lower rate than short-term gains, and retirement accounts can defer or avoid tax. Rules vary by country and change; check current rules or ask a tax professional."
+    }
+   ],
+   "takeaways": [
+    "Small fees compound into large sums.",
+    "Every trade has a cost, even when commissions are zero.",
+    "Holding periods and account types affect taxes."
+   ],
+   "quiz": [
+    {
+     "q": "A fund charges 1% a year and earns 7% before fees. What do you keep each year?",
+     "options": [
+      "7%",
+      "6%",
+      "8%"
+     ],
+     "answer": 1,
+     "why": "The fee comes off the top every year."
+    },
+    {
+     "q": "Why does frequent trading tend to hurt returns?",
+     "options": [
+      "Exchanges ban frequent traders",
+      "Spreads, commissions and taxes add up with every trade",
+      "Prices always fall after you buy"
+     ],
+     "answer": 1,
+     "why": "Each trade has costs; more trades mean more costs."
+    },
+    {
+     "q": "What is the bid–ask spread?",
+     "options": [
+      "The gap between the price buyers offer and sellers ask",
+      "A fund's yearly fee",
+      "The difference between a stock's high and low"
+     ],
+     "answer": 0,
+     "why": "You typically buy a little above and sell a little below the midpoint."
+    }
+   ],
+   "terms": [
+    "Expense ratio",
+    "Bid–ask spread",
+    "Commission",
+    "Capital gain"
+   ]
+  },
+  {
+   "id": "charts",
+   "level": "Reading charts",
+   "title": "Reading a price chart",
+   "minutes": 5,
+   "summary": "Line charts show the closing trend. Candlesticks and OHLC bars show each day's full range and who won the session.",
+   "sections": [
+    {
+     "h": "Line chart",
+     "p": "A line chart connects each day's closing price. It's the clearest way to see the overall trend and is the best choice for long ranges like 5 years or Max."
+    },
+    {
+     "h": "Candlesticks",
+     "p": "Each candle covers one day. The thick body spans the open and close; the thin wicks reach the day's high and low. A candle is drawn in the up color when the close is above the open and in the down color when it's below. A long lower wick means sellers pushed the price down but buyers drove it back up before the close."
+    },
+    {
+     "h": "OHLC bars",
+     "p": "An OHLC bar shows the same four prices as a candle: a vertical line from low to high, a tick to the left for the open, and a tick to the right for the close. Some people find bars easier to read when many days are on screen."
+    },
+    {
+     "h": "Volume",
+     "p": "Volume is how many shares changed hands. Big moves on heavy volume carry more conviction than the same move on light volume. Mutual funds have no volume because they don't trade on an exchange."
+    },
+    {
+     "h": "Scale and range",
+     "p": "A chart's look depends on its range. A one-month chart magnifies daily noise; a ten-year chart shows the long trend. Switch ranges before drawing conclusions. Prices on Signal Desk are adjusted for splits and dividends, so a 2-for-1 split doesn't appear as a 50% crash."
+    }
+   ],
+   "takeaways": [
+    "Line = closes only; best for long ranges.",
+    "Candles and OHLC bars show open, high, low and close.",
+    "Check volume and try several ranges before concluding anything."
+   ],
+   "quiz": [
+    {
+     "q": "On a candlestick, what does the body span?",
+     "options": [
+      "The high and the low",
+      "The open and the close",
+      "The previous close and today's close"
+     ],
+     "answer": 1,
+     "why": "The body runs from open to close; wicks show the high and low."
+    },
+    {
+     "q": "A candle has a long lower wick and closes near its high. What happened that day?",
+     "options": [
+      "Prices fell all day",
+      "Sellers pushed prices down but buyers drove them back up",
+      "Nothing traded"
+     ],
+     "answer": 1,
+     "why": "The wick shows the low; closing near the high shows the recovery."
+    },
+    {
+     "q": "Why do adjusted prices matter for long charts?",
+     "options": [
+      "They hide losses",
+      "They remove false drops from splits and include dividends",
+      "They convert prices to euros"
+     ],
+     "answer": 1,
+     "why": "Without adjustment, a split looks like a crash."
+    }
+   ],
+   "terms": [
+    "Line chart",
+    "Candlestick",
+    "OHLC bar",
+    "Volume",
+    "Adjusted price",
+    "Stock split"
+   ]
+  },
+  {
+   "id": "averages",
+   "level": "Reading charts",
+   "title": "Moving averages and trend",
+   "minutes": 5,
+   "summary": "A moving average smooths daily noise into a trend line. Price above a rising average suggests an uptrend.",
+   "sections": [
+    {
+     "h": "Simple moving average",
+     "p": "The 50-day simple moving average (SMA) is the average closing price over the last 50 trading days, recalculated every day. It turns a jagged price line into a smooth one that lags behind price."
+    },
+    {
+     "h": "Exponential moving average",
+     "p": "An exponential moving average (EMA) gives more weight to recent days, so it turns sooner than an SMA of the same length. Signal Desk can draw a 21-day EMA as a shorter-term trend line."
+    },
+    {
+     "h": "The 200-day average",
+     "p": "The 200-day SMA is a widely watched long-term trend line. Price above a rising 200-day average is the classic sign of an uptrend; below a falling one, a downtrend. Signal Desk's Trend score is built mostly from this."
+    },
+    {
+     "h": "Crossovers",
+     "p": "When a faster average crosses above a slower one, the short-term trend has turned up. The 50-day crossing above the 200-day is often called a golden cross; crossing below, a death cross. Signal Desk's buy/sell model uses a fast/slow crossover confirmed by MACD."
+    },
+    {
+     "h": "Bollinger Bands",
+     "p": "Bollinger Bands are lines two standard deviations above and below a 20-day average. They widen when prices get volatile and narrow when they calm. Price touching a band means the move is large compared with recent days, not that it must reverse."
+    },
+    {
+     "h": "Lag is the price of smoothness",
+     "p": "Moving averages only use the past. In choppy, sideways markets crossovers flip back and forth and generate losing trades. They work best when a strong trend develops."
+    }
+   ],
+   "takeaways": [
+    "An SMA averages the last N closes; an EMA weights recent days more.",
+    "Price above a rising 200-day average is the classic uptrend sign.",
+    "Crossovers lag and misfire in sideways markets."
+   ],
+   "quiz": [
+    {
+     "q": "What is a 'golden cross'?",
+     "options": [
+      "Price hitting a record high",
+      "The 50-day average crossing above the 200-day average",
+      "A stock paying its first dividend"
+     ],
+     "answer": 1,
+     "why": "It signals that the medium-term trend has turned above the long-term trend."
+    },
+    {
+     "q": "Why does an EMA react faster than an SMA of the same length?",
+     "options": [
+      "It uses more days",
+      "It weights recent prices more",
+      "It ignores weekends"
+     ],
+     "answer": 1,
+     "why": "More weight on recent days means it turns sooner."
+    },
+    {
+     "q": "When do moving-average crossovers work worst?",
+     "options": [
+      "In strong uptrends",
+      "In choppy, sideways markets",
+      "In strong downtrends"
+     ],
+     "answer": 1,
+     "why": "Without a trend, averages cross back and forth and trigger whipsaw trades."
+    }
+   ],
+   "terms": [
+    "Moving average (SMA)",
+    "Exponential moving average (EMA)",
+    "200-day moving average",
+    "Golden cross",
+    "Death cross",
+    "Bollinger Bands",
+    "Trend"
+   ]
+  },
+  {
+   "id": "momentum",
+   "level": "Reading charts",
+   "title": "Momentum: RSI and MACD",
+   "minutes": 6,
+   "summary": "Momentum indicators measure how strongly prices are moving. They help spot stretched moves and turning points.",
+   "sections": [
+    {
+     "h": "Momentum",
+     "p": "Momentum is the tendency of things that have been rising to keep rising for a while, and of fallers to keep falling. Researchers have found this pattern over 3- to 12-month periods across many markets, though it can reverse sharply. Signal Desk's Momentum score uses 3- and 12-month returns."
+    },
+    {
+     "h": "RSI",
+     "p": "The Relative Strength Index compares the size of recent up days to recent down days and scales the result from 0 to 100. Above 70 is commonly called overbought (price has run up fast); below 30, oversold. In a strong trend RSI can stay overbought for weeks, so it's a warning light, not a sell button."
+    },
+    {
+     "h": "MACD",
+     "p": "MACD is the difference between a 12-day and a 26-day exponential moving average. Its 9-day average is the signal line. MACD above its signal line means short-term momentum is improving; below means it's fading. The histogram shows the gap between the two."
+    },
+    {
+     "h": "Using them together",
+     "p": "Indicators built from the same prices often say the same thing in different ways. Signal Desk's buy rule waits for a trend crossover and a MACD confirmation and avoids buying when RSI is already overbought. Combining a trend signal with a momentum check filters out some false signals, at the cost of entering a little later."
+    }
+   ],
+   "takeaways": [
+    "Momentum: recent winners often keep winning for a while.",
+    "RSI above 70 = stretched up; below 30 = stretched down.",
+    "MACD above its signal line = momentum improving."
+   ],
+   "quiz": [
+    {
+     "q": "RSI reads 82. What does that suggest?",
+     "options": [
+      "The stock is guaranteed to fall",
+      "Prices have risen quickly and may be stretched",
+      "The stock is very cheap"
+     ],
+     "answer": 1,
+     "why": "High RSI means a fast run-up. It can stay high in strong trends."
+    },
+    {
+     "q": "MACD crosses above its signal line. This suggests:",
+     "options": [
+      "Short-term momentum is improving",
+      "The company's earnings rose",
+      "Volatility dropped to zero"
+     ],
+     "answer": 0,
+     "why": "It's a momentum signal built only from prices."
+    },
+    {
+     "q": "Over which periods has momentum most often been observed?",
+     "options": [
+      "One to two days",
+      "Three to twelve months",
+      "Ten to twenty years"
+     ],
+     "answer": 1,
+     "why": "The classic findings are for 3- to 12-month look-backs."
+    }
+   ],
+   "terms": [
+    "Momentum",
+    "RSI (Relative Strength Index)",
+    "Overbought",
+    "Oversold",
+    "MACD",
+    "Signal line"
+   ]
+  },
+  {
+   "id": "backtests",
+   "level": "Using Signal Desk",
+   "title": "Backtests and their limits",
+   "minutes": 5,
+   "summary": "A backtest replays a set of rules on past prices. It's useful for understanding rules, and dangerous when trusted too much.",
+   "sections": [
+    {
+     "h": "What a backtest does",
+     "p": "Signal Desk's backtest runs the buy/sell rules over the last five years, trading at the next day's close after each signal so it never uses a price it couldn't have known, and charging a cost per trade. It compares the result with simply buying and holding."
+    },
+    {
+     "h": "Overfitting",
+     "p": "If you tweak settings until the backtest looks great on one stock, you have probably fitted the rules to that stock's past noise. The next five years won't repeat the last five. Settings that work reasonably across many symbols are more trustworthy than settings that work brilliantly on one."
+    },
+    {
+     "h": "Compare with buy-and-hold",
+     "p": "Timing rules often trail buy-and-hold in strong bull markets because they sit in cash during part of the rise. They can shine by avoiding deep crashes. Look at return and maximum drawdown together."
+    },
+    {
+     "h": "What's left out",
+     "p": "Backtests skip taxes, slippage beyond the modeled cost, and the emotional difficulty of following rules when they're losing. Real results are usually worse than backtests."
+    }
+   ],
+   "takeaways": [
+    "Backtests show how rules behaved, not how they'll behave.",
+    "Beware settings tuned to one stock's past.",
+    "Judge return and drawdown together against buy-and-hold."
+   ],
+   "quiz": [
+    {
+     "q": "You adjust settings until a backtest on one stock looks amazing. The main danger is:",
+     "options": [
+      "The app will slow down",
+      "You've fitted the rules to past noise",
+      "Taxes will be lower"
+     ],
+     "answer": 1,
+     "why": "That's overfitting. Test the same settings on many symbols."
+    },
+    {
+     "q": "Why does Signal Desk fill trades at the next day's close?",
+     "options": [
+      "It's cheaper",
+      "So the test never uses a price it couldn't have known at the time",
+      "Markets are closed on signal days"
+     ],
+     "answer": 1,
+     "why": "Trading on a price you couldn't have known inflates results."
+    },
+    {
+     "q": "A timing strategy trails buy-and-hold in a strong bull market. Why is that common?",
+     "options": [
+      "Timing rules sit in cash during part of the rise",
+      "The backtest is broken",
+      "Bull markets have no volatility"
+     ],
+     "answer": 0,
+     "why": "Time out of the market misses some gains; the payoff is avoiding some crashes."
+    }
+   ],
+   "terms": [
+    "Backtest",
+    "Overfitting",
+    "Buy and hold",
+    "Slippage",
+    "Trailing stop"
+   ]
+  },
+  {
+   "id": "scores",
+   "level": "Using Signal Desk",
+   "title": "Using scores, and practicing safely",
+   "minutes": 5,
+   "summary": "Signal Desk's scores rank what the price record shows. Treat them as a starting point for research, then practice before risking money.",
+   "sections": [
+    {
+     "h": "How the score works",
+     "p": "Every symbol gets a 0–100 score from four parts: Trend (30%), price against its 50- and 200-day averages; Momentum (30%), 3- and 12-month returns; Risk (25%), volatility and the worst drop in the past year, where calmer scores higher; and Timing (15%), the buy/sell model's current call. Labels run Strong, Positive, Neutral, Weak and Weakest."
+    },
+    {
+     "h": "What it can't see",
+     "p": "The score uses only prices. It knows nothing about earnings, debt, valuation, management or news. A stock can score Strong right before bad news, and a great business can score Weak during a temporary slump. Momentum-based screens also tend to favor whatever has recently been popular."
+    },
+    {
+     "h": "A starting point",
+     "p": "Use the Picks list to find things worth a closer look, then open Research to read the chart, the statistics and the reasons. Ask why the price has done what it has, and whether you'd be comfortable holding through a deep drawdown."
+    },
+    {
+     "h": "Practice first",
+     "p": "The Practice portfolio starts with $100,000 of pretend money at real prices. Make your trades there first. Write down why you bought, then check back. Practicing lets you learn how it feels to watch a position fall, without paying for the lesson."
+    },
+    {
+     "h": "Not advice",
+     "p": "Signal Desk is an education and screening tool. It isn't a licensed advisor and doesn't know your situation. Before investing real money, consider your goals, timeline and emergency savings, and consider talking to a qualified professional."
+    }
+   ],
+   "takeaways": [
+    "Scores rank price behavior only.",
+    "Use Picks to find candidates and Research to understand them.",
+    "Practice with pretend money before using real money."
+   ],
+   "quiz": [
+    {
+     "q": "Which of these does Signal Desk's score consider?",
+     "options": [
+      "Company earnings",
+      "12-month price return",
+      "News headlines"
+     ],
+     "answer": 1,
+     "why": "It uses price history only: trend, momentum, risk and timing."
+    },
+    {
+     "q": "A symbol scores 85 (Strong). What's the sensible next step?",
+     "options": [
+      "Buy as much as possible",
+      "Research why, check the risks, and maybe practice first",
+      "Ignore it because high scores are always wrong"
+     ],
+     "answer": 1,
+     "why": "A score is a starting point for research, not a decision."
+    },
+    {
+     "q": "Why does the Risk part give crypto low scores?",
+     "options": [
+      "Crypto is illegal",
+      "Its volatility and drawdowns are usually much larger",
+      "Crypto has no price history"
+     ],
+     "answer": 1,
+     "why": "Calmer assets score higher on Risk."
+    }
+   ],
+   "terms": [
+    "Screening",
+    "Paper trading",
+    "Momentum",
+    "Volatility",
+    "Risk tolerance"
+   ]
+  }
+ ],
+ "glossary": [
+  {
+   "term": "200-day moving average",
+   "def": "The average closing price over the last 200 trading days. A widely watched long-term trend line."
+  },
+  {
+   "term": "Adjusted price",
+   "def": "A historical price revised so splits don't look like crashes and dividends are counted as if reinvested. Signal Desk's charts and returns use adjusted prices."
+  },
+  {
+   "term": "Annualized return (CAGR)",
+   "def": "The steady yearly growth rate that would turn the starting value into the ending value over the same period. Short for compound annual growth rate."
+  },
+  {
+   "term": "Asset allocation",
+   "def": "How your money is split among kinds of investments, such as stocks, bonds and cash."
+  },
+  {
+   "term": "Backtest",
+   "def": "A replay of trading rules on past prices to see how they would have behaved. It does not predict future results."
+  },
+  {
+   "term": "Beta",
+   "def": "How much an investment tends to move with the overall market. 1 moves in step with the S&P 500; above 1 moves more; below 1 moves less."
+  },
+  {
+   "term": "Bid–ask spread",
+   "def": "The gap between the highest price a buyer offers and the lowest price a seller asks. A hidden cost of every trade."
+  },
+  {
+   "term": "Blockchain",
+   "def": "A shared, public record of transactions that cryptocurrencies use instead of a central bank or company."
+  },
+  {
+   "term": "Bollinger Bands",
+   "def": "Lines drawn two standard deviations above and below a 20-day average. They widen in volatile periods and narrow in calm ones."
+  },
+  {
+   "term": "Bond",
+   "def": "A loan to a government or company that pays interest and returns the amount borrowed at a set date."
+  },
+  {
+   "term": "Buy and hold",
+   "def": "Buying an investment and keeping it through ups and downs instead of trading in and out."
+  },
+  {
+   "term": "Candlestick",
+   "def": "A chart mark for one period showing open, high, low and close. The body spans open to close; the wicks reach the high and low."
+  },
+  {
+   "term": "Capital gain",
+   "def": "Profit from selling an investment for more than you paid. Often taxed, with rates depending on how long you held it."
+  },
+  {
+   "term": "Commission",
+   "def": "A fee a broker charges per trade. Many brokers now charge none for stocks and ETFs."
+  },
+  {
+   "term": "Compounding",
+   "def": "Earning returns on earlier returns, so growth accelerates over time."
+  },
+  {
+   "term": "Correlation",
+   "def": "How closely two investments move together, from −1 (opposite) through 0 (unrelated) to +1 (in lockstep)."
+  },
+  {
+   "term": "Cryptocurrency",
+   "def": "A digital token recorded on a blockchain, such as Bitcoin or Ether. Trades every day and is typically very volatile."
+  },
+  {
+   "term": "Death cross",
+   "def": "When the 50-day moving average crosses below the 200-day. Seen as a sign the trend has turned down."
+  },
+  {
+   "term": "Diversification",
+   "def": "Spreading money across many investments so no single one can do too much damage."
+  },
+  {
+   "term": "Dividend",
+   "def": "Cash a company pays shareholders out of its profits, often every quarter."
+  },
+  {
+   "term": "Drawdown",
+   "def": "The fall from a peak to a later low, as a percentage."
+  },
+  {
+   "term": "ETF",
+   "def": "Exchange-traded fund: a fund whose shares trade on a stock exchange throughout the day, usually tracking an index."
+  },
+  {
+   "term": "Expense ratio",
+   "def": "A fund's yearly fee as a percentage of the money invested in it."
+  },
+  {
+   "term": "Exponential moving average (EMA)",
+   "def": "A moving average that gives more weight to recent prices, so it reacts faster than a simple average of the same length."
+  },
+  {
+   "term": "Fund",
+   "def": "A pool of money from many investors used to buy a basket of investments."
+  },
+  {
+   "term": "Golden cross",
+   "def": "When the 50-day moving average crosses above the 200-day. Seen as a sign the trend has turned up."
+  },
+  {
+   "term": "Index",
+   "def": "A published list of investments that measures a market, such as the S&P 500 or the Nasdaq Composite."
+  },
+  {
+   "term": "Index fund",
+   "def": "A fund that copies an index instead of picking investments. Usually low-cost."
+  },
+  {
+   "term": "Line chart",
+   "def": "A chart that connects closing prices. Best for seeing the trend over long ranges."
+  },
+  {
+   "term": "MACD",
+   "def": "Moving Average Convergence Divergence: the 12-day EMA minus the 26-day EMA. Compared with its own 9-day average (the signal line) to judge momentum."
+  },
+  {
+   "term": "Market capitalization",
+   "def": "Share price times the number of shares: what the market values the whole company at."
+  },
+  {
+   "term": "Maximum drawdown",
+   "def": "The worst peak-to-low fall over a period."
+  },
+  {
+   "term": "Momentum",
+   "def": "The tendency of recent winners to keep rising, and losers to keep falling, for a while."
+  },
+  {
+   "term": "Moving average (SMA)",
+   "def": "Simple moving average: the average closing price over the last N trading days, recalculated each day."
+  },
+  {
+   "term": "Mutual fund",
+   "def": "A fund bought from and sold back to the fund company once a day at its net asset value."
+  },
+  {
+   "term": "Net asset value",
+   "def": "The value of everything a fund holds, minus what it owes, divided by its shares. Mutual funds trade at this price once a day."
+  },
+  {
+   "term": "OHLC bar",
+   "def": "A chart mark showing open (left tick), high and low (vertical line) and close (right tick) for one period."
+  },
+  {
+   "term": "Overbought",
+   "def": "A price that has risen quickly, often taken as RSI above 70. It can stay overbought in a strong trend."
+  },
+  {
+   "term": "Overfitting",
+   "def": "Tuning rules so closely to past data that they capture noise and fail on new data."
+  },
+  {
+   "term": "Oversold",
+   "def": "A price that has fallen quickly, often taken as RSI below 30."
+  },
+  {
+   "term": "Paper trading",
+   "def": "Practicing trades with pretend money at real prices. Signal Desk's Practice portfolio does this."
+  },
+  {
+   "term": "Return",
+   "def": "The gain or loss on an investment as a percentage of what you started with."
+  },
+  {
+   "term": "Risk tolerance",
+   "def": "How much loss and uncertainty you can live with without abandoning your plan."
+  },
+  {
+   "term": "RSI (Relative Strength Index)",
+   "def": "A 0–100 momentum gauge comparing recent up moves with down moves. Above 70 is called overbought, below 30 oversold."
+  },
+  {
+   "term": "Screening",
+   "def": "Filtering and ranking many investments by rules to find candidates for closer research."
+  },
+  {
+   "term": "Sector",
+   "def": "A group of companies in the same broad industry, such as technology or energy."
+  },
+  {
+   "term": "Share",
+   "def": "One unit of ownership in a company or fund."
+  },
+  {
+   "term": "Signal line",
+   "def": "The 9-day average of MACD. MACD crossing above it suggests improving momentum."
+  },
+  {
+   "term": "Slippage",
+   "def": "The difference between the price you expected and the price you actually got."
+  },
+  {
+   "term": "Standard deviation",
+   "def": "A measure of how spread out values are from their average. Applied to returns, it measures volatility."
+  },
+  {
+   "term": "Stock",
+   "def": "Ownership in a company, divided into shares."
+  },
+  {
+   "term": "Stock split",
+   "def": "A company dividing each share into several (or combining several into one). It changes the share count and price, not the company's value."
+  },
+  {
+   "term": "Total return",
+   "def": "Price change plus dividends or other payouts, over a period."
+  },
+  {
+   "term": "Trailing stop",
+   "def": "A sell rule that triggers when price falls a set percentage below its highest point since you bought."
+  },
+  {
+   "term": "Trend",
+   "def": "The general direction of prices over a period: up, down or sideways."
+  },
+  {
+   "term": "Volatility",
+   "def": "How much prices swing, usually given as the yearly standard deviation of returns."
+  },
+  {
+   "term": "Volume",
+   "def": "The number of shares traded in a period. Heavy volume suggests more conviction behind a move."
+  }
+ ],
+ "explain": {
+  "price": {
+   "title": "Price",
+   "body": "The latest closing price, adjusted for splits and dividends. During market hours it's the latest trade; mutual funds update once a day after the close.",
+   "term": "Adjusted price"
+  },
+  "day": {
+   "title": "Day change",
+   "body": "How much the price moved from the previous close, as a percentage.",
+   "term": "Return"
+  },
+  "returns": {
+   "title": "Returns",
+   "body": "Price change over each period, including dividends. 1M, 3M and 6M are total changes; YTD is since the last close of the previous year; 3Y and 5Y are annualized, meaning the steady yearly rate that would produce the same total.",
+   "term": "Annualized return (CAGR)"
+  },
+  "range52": {
+   "title": "52-week range",
+   "body": "The lowest and highest prices over the past year. The marker shows where today's price sits in that range. Near the top often goes with an uptrend; near the bottom, a downtrend.",
+   "term": "Trend"
+  },
+  "vol": {
+   "title": "Volatility (1 year)",
+   "body": "How much the price typically swings in a year, from the standard deviation of daily returns. Around 15–20% is typical for a broad stock fund; 50% or more is common for crypto.",
+   "term": "Volatility"
+  },
+  "dd": {
+   "title": "Max drawdown",
+   "body": "The worst fall from a high to a later low. 1 year looks at the past year; All time looks at the full saved history.",
+   "term": "Maximum drawdown"
+  },
+  "beta": {
+   "title": "Beta vs S&P 500",
+   "body": "How much this tends to move when the S&P 500 moves, measured on daily returns over the past year. 1.0 moves in step; 1.5 about half again as much; 0.5 about half as much. Near 0 means it moves mostly on its own.",
+   "term": "Beta"
+  },
+  "avgvol": {
+   "title": "Average volume",
+   "body": "Average number of shares (or coins) traded per day over the last three months. Higher volume usually means easier, cheaper trading. Mutual funds don't trade on an exchange, so they have none.",
+   "term": "Volume"
+  },
+  "score": {
+   "title": "Signal Desk score",
+   "body": "A 0–100 ranking from price history only: Trend 30%, Momentum 30%, Risk 25%, Timing 15%. Strong is 70 and up, Positive 55–69, Neutral 40–54, Weak 25–39, Weakest below 25. It's a screen for research, not advice, and it knows nothing about earnings, valuation or news.",
+   "term": "Screening"
+  },
+  "trend": {
+   "title": "Trend score",
+   "body": "Points for price above its 200-day average (35), above its 50-day (20), the 50-day above the 200-day (25), and the 200-day average rising over the last month (20).",
+   "term": "200-day moving average"
+  },
+  "momentum": {
+   "title": "Momentum score",
+   "body": "Mostly the 12-month return (60%), scaled so −30% scores 0 and +40% scores 100, plus the 3-month return (40%), scaled from −15% to +15%.",
+   "term": "Momentum"
+  },
+  "risk": {
+   "title": "Risk score",
+   "body": "Calmer scores higher. Mostly yearly volatility (60%), scaled so 80% scores 0 and 12% scores 100, plus the worst drop in the past year (40%), scaled from −60% to −8%.",
+   "term": "Volatility"
+  },
+  "timing": {
+   "title": "Timing score",
+   "body": "From the buy/sell model's current call: Buy 100, Hold 75, Wait 30–45 (higher in an uptrend), Sell 5. Overbought RSI subtracts 25.",
+   "term": "Overbought"
+  },
+  "call": {
+   "title": "Today's call",
+   "body": "What the buy/sell rules say on the latest close. Buy and Sell mean a signal fired today. Hold means the rules would be in the position; Wait means they'd be in cash.",
+   "term": "Backtest"
+  },
+  "backtest": {
+   "title": "Backtest results",
+   "body": "The buy/sell rules replayed over the last five years, trading at the next day's close and charging the cost per trade, compared with buying and holding for the same period.",
+   "term": "Backtest"
+  },
+  "chart-type": {
+   "title": "Chart types",
+   "body": "Line connects closing prices; it's clearest for long ranges. Candles and OHLC bars show each day's open, high, low and close. Green (or hollow) means it closed up on the day; red means down.",
+   "term": "Candlestick"
+  },
+  "sma": {
+   "title": "Strategy averages",
+   "body": "The fast and slow simple moving averages the buy/sell rules use (20 and 50 days by default). The fast crossing above the slow is the trend part of a buy signal.",
+   "term": "Moving average (SMA)"
+  },
+  "ema21": {
+   "title": "EMA 21",
+   "body": "A 21-day exponential moving average, weighted toward recent days. A common short-term trend line.",
+   "term": "Exponential moving average (EMA)"
+  },
+  "sma200": {
+   "title": "SMA 200",
+   "body": "The 200-day simple moving average. Price above a rising 200-day is the classic long-term uptrend sign.",
+   "term": "200-day moving average"
+  },
+  "bb": {
+   "title": "Bollinger Bands",
+   "body": "Lines two standard deviations above and below the 20-day average. Wide bands mean volatile prices; a touch of a band means a large move for recent conditions.",
+   "term": "Bollinger Bands"
+  },
+  "signals": {
+   "title": "Buy and sell markers",
+   "body": "Triangles where the rules fired in the backtest window: up for buys, down for sells. Hover a day to read why.",
+   "term": "Backtest"
+  },
+  "volume": {
+   "title": "Volume panel",
+   "body": "Shares traded each day, colored by whether the day closed up or down.",
+   "term": "Volume"
+  },
+  "rsi": {
+   "title": "RSI panel",
+   "body": "The 14-day Relative Strength Index, from 0 to 100. The shaded lines mark overbought and oversold levels from your strategy settings.",
+   "term": "RSI (Relative Strength Index)"
+  },
+  "macd": {
+   "title": "MACD panel",
+   "body": "MACD (12-day EMA minus 26-day EMA), its 9-day signal line, and the histogram of the gap between them.",
+   "term": "MACD"
+  },
+  "equity": {
+   "title": "Strategy vs buy & hold",
+   "body": "Growth of $10,000 following the rules compared with simply holding, over the backtest window.",
+   "term": "Buy and hold"
+  },
+  "practice": {
+   "title": "Practice portfolio",
+   "body": "Pretend money at real, latest saved prices. Trades fill instantly at the last close with no fees, and fractional shares are allowed. Nothing here touches a real account.",
+   "term": "Paper trading"
+  },
+  "vs-sp": {
+   "title": "Compared with the S&P 500",
+   "body": "What the same money would be worth if every deposit had gone into an S&P 500 index on the day your practice portfolio started.",
+   "term": "Index"
+  },
+  "asset-type": {
+   "title": "Asset type",
+   "body": "Stock, ETF, mutual fund, crypto or index, as reported by the price service. It affects trading hours, how returns are annualized, and which lessons apply.",
+   "term": "Fund"
+  }
+ }
+}

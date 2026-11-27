@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 VERSION=$(tr -d ' \r\n' < VERSION)
 rm -rf out && mkdir out
 javac --release 17 -d out $(find src -name '*.java')
-cp -r res/fonts out/
+cp -r res/fonts res/content out/
 printf 'Main-Class: com.signaldesk.App\nImplementation-Title: Signal Desk\nImplementation-Version: %s\n' "$VERSION" > manifest.txt
 rm -f SignalDesk-*.jar SignalDesk.jar
 jar cfm "SignalDesk-$VERSION.jar" manifest.txt -C out .

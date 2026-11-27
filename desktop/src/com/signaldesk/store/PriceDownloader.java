@@ -31,7 +31,7 @@ public final class PriceDownloader {
     public static final class NotFound extends Exception { public NotFound(String m) { super(m); } }
 
     /** full is true when the whole history was downloaded; added counts days that were new. */
-    public record Result(PriceSeries series, String name, String currency, String exchange, Instant fetched, boolean full, int added) {}
+    public record Result(PriceSeries series, String name, String currency, String exchange, Instant fetched, boolean full, int added, String type) {}
     public record Match(String symbol, String name, String exchange, String type) {
         @Override public String toString() { return symbol + "  " + name; }
     }
@@ -58,13 +58,13 @@ public final class PriceDownloader {
                 Result recent = fetch(sym, "range=1mo&interval=1d", 1);
                 if (consistent(saved, recent.series())) {
                     PriceSeries merged = merge(saved, recent.series());
-                    return new Result(merged, recent.name(), recent.currency(), recent.exchange(), recent.fetched(), false, merged.size() - saved.size());
+                    return new Result(merged, recent.name(), recent.currency(), recent.exchange(), recent.fetched(), false, merged.size() - saved.size(), recent.type());
                 }
             }
         }
         long now = Instant.now().getEpochSecond() + 86400;
         Result full = fetch(sym, "period1=-2208988800&period2=" + now + "&interval=1d", 60);
-        return new Result(full.series(), full.name(), full.currency(), full.exchange(), full.fetched(), true, full.series().size() - (saved == null ? 0 : saved.size()));
+        return new Result(full.series(), full.name(), full.currency(), full.exchange(), full.fetched(), true, full.series().size() - (saved == null ? 0 : saved.size()), full.type());
     }
 
     private static Result fetch(String sym, String query, int minRows) throws Exception {
@@ -112,6 +112,7 @@ public final class PriceDownloader {
         HttpRequest req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(20))
             .header("User-Agent", UA).header("Accept", "application/json,text/plain,*/*").GET().build();
         HttpResponse<String> res = HTTP.send(req, HttpResponse.BodyHandlers.ofString());
+        if (res.statusCode() == 429) { Thread.sleep(4000); res = HTTP.send(req, HttpResponse.BodyHandlers.ofString()); }
         int code = res.statusCode();
         if (code == 404) {
             String d = describeError(res.body());
@@ -160,7 +161,8 @@ public final class PriceDownloader {
         for (Map.Entry<LocalDate, double[]> e : byDate.entrySet()) { double[] x = e.getValue(); dates.add(e.getKey().toString()); ac[k] = x[0]; o[k] = x[1]; h[k] = x[2]; l[k] = x[3]; rc[k] = x[4]; v[k] = x[5]; k++; }
         String name = Json.str(meta, "longName", Json.str(meta, "shortName", ""));
         return new Result(new PriceSeries(sym, dates, ac, o, h, l, rc, v), name, Json.str(meta, "currency", "USD"),
-            Json.str(meta, "fullExchangeName", Json.str(meta, "exchangeName", "")), Instant.now(), true, n);
+            Json.str(meta, "fullExchangeName", Json.str(meta, "exchangeName", "")), Instant.now(), true, n,
+            com.signaldesk.signals.AssetType.of(Json.str(meta, "instrumentType", null), sym).name());
     }
     private static Double num(List<Object> a, int i) { return i < a.size() && a.get(i) instanceof Number n ? n.doubleValue() : null; }
     private static double orElse(Double v, double d) { return v == null ? d : v; }

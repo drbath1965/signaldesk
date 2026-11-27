@@ -18,7 +18,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-public final class SignalsView extends View {
+public final class ResearchView extends View {
     private static PriceSeries lastShown;
     private static final int[] RANGES = {21, 63, 126, 252, 504, 1260, Integer.MAX_VALUE};
     private static final String[] RANGE_LABELS = {"1M", "3M", "6M", "1Y", "2Y", "5Y", "Max"};
@@ -28,7 +28,7 @@ public final class SignalsView extends View {
     private final Slot history = new Slot();
     private PriceSeries data; private boolean sample;
     private SignalEngine eng;
-    private final Slot header = new Slot(), notice = new Slot(), verdict = new Slot(), stats = new Slot(), trades = new Slot(), rules = new Slot(), chips = new Slot();
+    private final Slot header = new Slot(), notice = new Slot(), verdict = new Slot(), stats = new Slot(), trades = new Slot(), rules = new Slot(), chips = new Slot(), scorecard = new Slot();
     private final JLabel readout = Ui.text(" ", Theme.mono(12f), Theme.T.muted), readSig = Ui.text(" ", Theme.mono(12f), Theme.T.muted);
     private PriceChart chart;
     private JTextField symField;
@@ -40,7 +40,7 @@ public final class SignalsView extends View {
     private boolean typing = true;
     private String loading;
 
-    public SignalsView(MainFrame app, String requested) { super(app); this.requested = requested; }
+    public ResearchView(MainFrame app, String requested) { super(app); this.requested = requested; }
 
     @Override public JComponent build() {
         if (lastShown != null) { data = lastShown; sample = "DEMO".equals(data.symbol()); }
@@ -54,25 +54,25 @@ public final class SignalsView extends View {
         top.grow(header);
         symField = Ui.field(sample ? "" : data.symbol(), 9);
         symField.setFont(Theme.mono(18f));
-        symField.setToolTipText("Type a ticker such as MSFT, or a company name such as Microsoft");
+        symField.setToolTipText("Type a ticker such as MSFT, VOO, VFIAX or BTC-USD, or a name such as Microsoft or Bitcoin");
         symField.addActionListener(e -> { hideSuggest(); analyze(symField.getText(), false); });
         installSuggestions();
         Ui.VBox form = new Ui.VBox(6);
-        form.add(Ui.caps("Stock symbol or company"), false);
+        form.add(Ui.caps("Symbol or name"), false);
         Ui.HBox fr = new Ui.HBox(8); symField.setPreferredSize(new Dimension(170, 40)); fr.add(symField); fr.add(Ui.primary("Analyze", () -> analyze(symField.getText(), false)));
         form.add(fr, false);
         form.add(chips, false);
         top.add(form);
         root.add(top);
         Ui.HBox tools = new Ui.HBox(12);
-        tools.add(Ui.btn("Refresh now", () -> { if (!sample) analyze(data.symbol(), true); else app.toast("Pick a stock first.", null); }));
+        tools.add(Ui.btn("Refresh now", () -> { if (!sample) analyze(data.symbol(), true); else app.toast("Pick a symbol first.", null); }));
         tools.add(updated);
         tools.glue();
         tools.add(Ui.link("Show practice sample", () -> show(SignalEngine.sample())));
         root.add(tools);
         root.add(notice);
         root.add(verdict);
-        root.add(stats);
+        root.add(scorecard);
 
         Ui.Card cc = new Ui.Card(10);
         chart = new PriceChart(this::hoverAt);
@@ -92,14 +92,14 @@ public final class SignalsView extends View {
         typeSeg.set(Ui.seg(types, ty.ordinal(), k -> pickType[0].accept(k)));
         rangeSeg.set(Ui.seg(RANGE_LABELS, rsel, k -> pickRange[0].accept(k)));
         Ui.HBox ch = new Ui.HBox(12);
-        ch.add(typeSeg); ch.glue(); ch.add(rangeSeg);
+        ch.add(typeSeg); ch.add(Help.q(app, "chart-type")); ch.glue(); ch.add(rangeSeg);
         cc.add(ch);
         Ui.HBox tg = new Ui.HBox(6), tp = new Ui.HBox(6);
         JLabel l1 = Ui.text("On chart", Theme.body(12f), Theme.T.muted), l2 = Ui.text("Panels", Theme.body(12f), Theme.T.muted);
         l1.setPreferredSize(new Dimension(62, 20)); l2.setPreferredSize(new Dimension(62, 20));
         tg.add(l1); tp.add(l2);
-        for (String[] k : new String[][]{{PriceChart.SMA, "Strategy SMAs"}, {PriceChart.EMA21, "EMA 21"}, {PriceChart.SMA200, "SMA 200"}, {PriceChart.BB, "Bollinger Bands"}, {PriceChart.SIGNALS, "Buy/sell"}}) tg.add(toggle(k[0], k[1]));
-        for (String[] k : new String[][]{{PriceChart.VOLUME, "Volume"}, {PriceChart.RSI, "RSI"}, {PriceChart.MACD, "MACD"}, {PriceChart.EQUITY, "Strategy vs buy & hold"}}) tp.add(toggle(k[0], k[1]));
+        for (String[] k : new String[][]{{PriceChart.SMA, "Strategy SMAs", "sma"}, {PriceChart.EMA21, "EMA 21", "ema21"}, {PriceChart.SMA200, "SMA 200", "sma200"}, {PriceChart.BB, "Bollinger Bands", "bb"}, {PriceChart.SIGNALS, "Buy/sell", "signals"}}) tg.add(withHelp(toggle(k[0], k[1]), k[2]));
+        for (String[] k : new String[][]{{PriceChart.VOLUME, "Volume", "volume"}, {PriceChart.RSI, "RSI", "rsi"}, {PriceChart.MACD, "MACD", "macd"}, {PriceChart.EQUITY, "Strategy vs buy & hold", "equity"}}) tp.add(withHelp(toggle(k[0], k[1]), k[2]));
         cc.add(tg); cc.add(tp);
         Ui.VBox ro = new Ui.VBox(2); ro.add(readout); ro.add(readSig); cc.add(ro);
         cc.add(chart);
@@ -114,6 +114,10 @@ public final class SignalsView extends View {
         settings.add(paramHint);
         settings.add(Ui.small("Reset to defaults", () -> { s().sig = new SignalParams(); app.changed(); app.rebuild(); }), false);
         root.add(Ui.rail(cc, settings, 320));
+        Ui.VBox bt = new Ui.VBox(10);
+        bt.add(Help.label(app, Ui.h2("Backtest: the buy/sell rules over the last 5 years"), "backtest"), false);
+        bt.add(stats);
+        root.add(bt);
         root.add(trades);
         root.add(rules);
         show(data);
@@ -149,22 +153,35 @@ public final class SignalsView extends View {
         eng = SignalEngine.run(bt, s().sig);
         Theme t = Theme.T; double[] c = d.close(); int L = c.length - 1;
         double ch = c[L] / c[L - 1] - 1;
-        Ui.VBox h = new Ui.VBox(2);
-        h.add(Ui.caps("Stock signals"), false);
-        Ui.HBox line = new Ui.HBox(14); line.add(Ui.h1(d.symbol())); line.add(Ui.mono(Fmt.money2(c[L]), 20f, t.ink)); line.add(Ui.mono(Fmt.pct(ch, 2) + " on the day", 14f, Kit.signColor(ch)));
+        AssetType type = sample ? AssetType.STOCK : app.prices().type(d.symbol());
+        Ui.VBox h = new Ui.VBox(4);
+        h.add(Ui.caps("Research"), false);
+        Ui.HBox line = new Ui.HBox(14); line.add(Ui.h1(d.symbol())); line.add(Ui.mono(Kit.price(c[L]), 20f, t.ink)); line.add(Ui.mono(Kit.signedPct(ch, 2) + " on the day", 14f, Kit.signColor(ch)));
         h.add(line, false);
-        String nm = sample ? "" : app.prices().name(d.symbol());
-        h.add(Ui.text((nm.isBlank() ? "" : nm + "   ·   ") + "Last price " + Dates.dayLong(d.lastDate()), Theme.body(13f), t.muted), false);
+        String nm = sample ? "Practice sample" : app.prices().name(d.symbol());
+        Ui.HBox sub = new Ui.HBox(10);
+        sub.add(Help.label(app, Kit.typePill(type), "asset-type"));
+        sub.add(Ui.text((nm.isBlank() ? "" : nm + "   ·   ") + "Last price " + Dates.dayLong(d.lastDate()), Theme.body(13f), t.muted));
+        h.add(sub, false);
+        if (!sample && type != AssetType.INDEX) {
+            Ui.HBox acts = new Ui.HBox(8); String sym = d.symbol();
+            boolean on = s().watchlist.contains(sym);
+            acts.add(on ? Ui.small("✓ On watchlist", () -> { s().watchlist.remove(sym); app.changed(); show(data); app.toast("Removed " + sym + " from the watchlist", null); })
+                        : Ui.small("+ Add to watchlist", () -> { s().watchlist.add(sym); app.changed(); show(data); app.toast("Added " + sym + " to the watchlist", null); }));
+            acts.add(Ui.small("Practice trade", () -> app.trade(sym)));
+            h.add(acts, false);
+        }
         header.set(h);
         updateFreshness();
         if (symField != null && !sample && !symField.isFocusOwner()) { typing = false; symField.setText(d.symbol()); typing = true; }
         // chips
         Ui.HBox cp = new Ui.HBox(6);
-        List<String> saved = app.prices().symbols();
-        if (saved.isEmpty()) cp.add(Ui.hint("Type any US ticker, then press Analyze."));
-        else { cp.add(Ui.text("Saved:", Theme.body(12.5f), t.muted)); for (String sym : saved.subList(0, Math.min(8, saved.size()))) cp.add(chip(sym, !sample && sym.equals(d.symbol()))); }
+        List<String> saved = s().watchlist;
+        if (saved.isEmpty()) cp.add(Ui.hint("Type a ticker or name, then press Analyze."));
+        else { cp.add(Ui.text("Watchlist:", Theme.body(12.5f), t.muted)); for (String sym : saved.subList(0, Math.min(8, saved.size()))) cp.add(chip(sym, !sample && sym.equals(d.symbol()))); }
         chips.set(cp);
         notice.set(sample ? noticeBand("Practice sample. DEMO is a made-up price series. Type a ticker or company name above and its real prices download and chart automatically.") : new JPanel() {{ setOpaque(false); setPreferredSize(new Dimension(0, 0)); }});
+        scorecard.set(scorecard(d, type));
         if (eng.error != null) {
             verdict.set(Ui.para(eng.error, Theme.body(14f), t.sell)); stats.set(new JPanel()); trades.set(new JPanel()); chart.set(d, null, 0, s().sig); history.set(historyLine()); rules.set(rulesCards()); return;
         }
@@ -242,7 +259,7 @@ public final class SignalsView extends View {
             @Override public Dimension getPreferredSize() { return new Dimension(310, super.getPreferredSize().height); }
         };
         call.setBorder(new EmptyBorder(22, 24, 22, 24));
-        call.add(Ui.caps("Today's call"), false);
+        call.add(Help.label(app, Ui.caps("Today's call"), "call"), false);
         call.add(Ui.text(word, Theme.display(58f), fg), false);
         JTextArea why = Ui.para(v.why(), Theme.body(14f), t.ink); why.putClientProperty("maxw", 262); call.add(why);
         call.end();
@@ -257,6 +274,68 @@ public final class SignalsView extends View {
         outer.add(rd, BorderLayout.CENTER);
         return outer;
     }
+    private JComponent withHelp(JComponent c, String key) { Ui.HBox h = new Ui.HBox(3); h.add(c); h.add(Help.q(app, key)); return h; }
+
+    // ------------------------------------------------------------------ score and key statistics
+    private JComponent scorecard(PriceSeries d, AssetType type) {
+        Theme t = Theme.T;
+        Stats st; Scoring.Result sc;
+        PriceService.Analysis a = sample ? null : app.priceService().analysis(d.symbol());
+        if (a != null) { st = a.stats(); sc = a.score(); }
+        else if (d.size() >= 30) { st = Stats.of(d, null, type); sc = type == AssetType.INDEX ? null : Scoring.score(d, st, s().sig); }
+        else return new JPanel() {{ setOpaque(false); setPreferredSize(new Dimension(0, 0)); }};
+        JComponent left;
+        if (sc != null) {
+            Ui.Card c = Kit.card(null, null);
+            Ui.HBox top = new Ui.HBox(14);
+            Ui.VBox big = new Ui.VBox(0);
+            big.add(Help.label(app, Ui.caps("Signal Desk score"), "score"), false);
+            Ui.HBox num = new Ui.HBox(8); num.add(Ui.text(String.valueOf(Math.round(sc.score())), Theme.display(46f), Ui.toneFg(Kit.tone(sc.rating())))); num.add(Ui.text("/ 100", Theme.body(14f), t.muted));
+            big.add(num, false); big.add(Ui.pill(sc.rating().label, Kit.tone(sc.rating())), false);
+            top.add(big);
+            Ui.VBox parts = new Ui.VBox(8);
+            for (Scoring.Part p : sc.parts()) {
+                Ui.HBox r = new Ui.HBox(10);
+                JComponent lab = Help.label(app, Ui.text(p.name() + " · " + Math.round(p.weight() * 100) + "%", Theme.medium(12.5f), t.ink), p.name().toLowerCase());
+                lab.setPreferredSize(new Dimension(150, 20)); r.add(lab);
+                r.grow(Ui.meter(p.score() / 100, false, null));
+                JLabel v = Ui.mono(String.valueOf(Math.round(p.score())), 12.5f, t.ink); v.setPreferredSize(new Dimension(28, 18)); v.setHorizontalAlignment(SwingConstants.RIGHT); r.add(v);
+                parts.add(r);
+            }
+            top.grow(parts);
+            c.add(top);
+            Ui.VBox why = new Ui.VBox(6);
+            for (Scoring.Reason r : sc.reasons()) {
+                Ui.HBox h = new Ui.HBox(8); h.add(Ui.text(r.good() ? "+" : "−", Theme.monoBold(14f), r.good() ? t.buy : t.sell));
+                JTextArea p = Ui.para(r.text(), Theme.body(13.5f), t.ink); p.putClientProperty("maxw", 560); h.grow(p); why.add(h);
+            }
+            c.add(why);
+            c.add(Kit.disclaimer());
+            left = c;
+        } else {
+            Ui.Card c = Kit.card("Market index", null);
+            c.add(Ui.para("Indexes measure a whole market. They aren't scored because you can't buy an index directly; index funds such as VOO or VTI track them."));
+            left = c;
+        }
+        Ui.Card k = Kit.card("Key statistics", null);
+        Kit.Grid g = new Kit.Grid(new String[]{"", ""}, new int[]{-130, 150}, "_r");
+        statRow(g, "Returns", "returns", null);
+        for (Object[] r : new Object[][]{{"1 month", st.r1m}, {"3 months", st.r3m}, {"6 months", st.r6m}, {"Year to date", st.ytd}, {"1 year", st.r1y}, {"3 years, per year", st.r3yAnn}, {"5 years, per year", st.r5yAnn}})
+            g.row(null, Ui.text("   " + r[0], Theme.body(13f), t.muted), Kit.pct((double) r[1], 1, 13f));
+        statRow(g, "52-week range", "range52", Ui.mono(Kit.price(st.low52) + " – " + Kit.price(st.high52), 13f, t.ink));
+        g.row(null, Ui.text("   Today's place in it", Theme.body(13f), t.muted), Ui.mono(Fmt.pctu(st.rangePos52), 13f, t.ink));
+        statRow(g, "Volatility, 1 year", "vol", Ui.mono(Fmt.pctu(st.vol1y), 13f, t.ink));
+        statRow(g, "Max drawdown, 1 year", "dd", Kit.pct(st.dd1y, 0, 13f));
+        g.row(null, Ui.text("   All time", Theme.body(13f), t.muted), Kit.pct(st.ddAll, 0, 13f));
+        statRow(g, "Beta vs S&P 500", "beta", Ui.mono(Double.isNaN(st.beta) ? "—" : Fmt.num(st.beta, 2), 13f, t.ink));
+        statRow(g, "Average daily volume", "avgvol", Ui.mono(Double.isNaN(st.avgVol) ? "—" : PriceChart.Fmt2.compactCount(st.avgVol), 13f, t.ink));
+        k.add(g);
+        return Ui.rail(Ui.top(left), Ui.top(k), 340);
+    }
+    private void statRow(Kit.Grid g, String label, String key, JComponent value) {
+        g.row(null, Help.label(app, Ui.text(label, Theme.medium(13f), Theme.T.ink), key), value);
+    }
+
     private JComponent reading(String label, String value, Ui.Tone tone, String pill) {
         Ui.VBox v = new Ui.VBox(4); v.add(Ui.caps(label), false); v.add(Ui.mono(value, 17f, Theme.T.ink), false); v.add(Ui.pill(pill, tone), false); v.end(); return v;
     }
@@ -320,7 +399,7 @@ public final class SignalsView extends View {
             h.add(Ui.link("Open prices folder", () -> { try { java.nio.file.Files.createDirectories(app.prices().folder()); Desktop.getDesktop().open(app.prices().folder().toFile()); } catch (Exception ex) { JOptionPane.showMessageDialog(app, "Your prices folder is:\n" + app.prices().folder()); } }));
             h.add(Ui.link("Re-download full history", () -> {
                 String sym = d.symbol(); loading = sym; updateFreshness();
-                app.priceService().fetch(sym, PriceService.Mode.FULL, p -> { loading = null; if (app.section().equals("signals")) { show(p); app.toast(sym + ": full history downloaded again", null); } },
+                app.priceService().fetch(sym, PriceService.Mode.FULL, p -> { loading = null; if (app.section().equals("research")) { show(p); app.toast(sym + ": full history downloaded again", null); } },
                     ex -> { loading = null; updateFreshness(); app.toast("Couldn't download " + sym + ": " + PriceService.explain(ex), null); });
             }));
             v.add(h, false);
@@ -367,11 +446,11 @@ public final class SignalsView extends View {
         if (cached == null) loadingState(sym);
         app.priceService().fetch(sym, true, p -> {
             loading = null;
-            if (!app.section().equals("signals")) return;
+            if (!app.section().equals("research")) return;
             show(p);
         }, ex -> {
             loading = null; updateFreshness();
-            if (!app.section().equals("signals")) return;
+            if (!app.section().equals("research")) return;
             if (cached != null) { app.toast("Couldn't update " + sym + ". Showing prices from " + ago(app.prices().fetchedAt(sym)) + ".", null); return; }
             if (sample || data == null) show(data == null ? SignalEngine.sample() : data);
             downloadHelp(sym, PriceService.explain(ex), ex instanceof PriceDownloader.NotFound);
@@ -379,12 +458,12 @@ public final class SignalsView extends View {
     }
     private void refreshQuietly(String sym) {
         loading = sym; updateFreshness();
-        app.priceService().fetch(sym, true, p -> { loading = null; if (sym.equals(data.symbol()) && app.section().equals("signals")) show(p); }, ex -> { loading = null; updateFreshness(); });
+        app.priceService().fetch(sym, true, p -> { loading = null; if (sym.equals(data.symbol()) && app.section().equals("research")) show(p); }, ex -> { loading = null; updateFreshness(); });
     }
     private void loadingState(String sym) {
         Ui.Card c = new Ui.Card();
         c.add(Ui.h2("Downloading " + sym + "…"));
-        c.add(Ui.para("Getting the full daily price history and saving it on this computer. The first download for a stock takes a few seconds; after that only new days are fetched."));
+        c.add(Ui.para("Getting the full daily price history and saving it on this computer. The first download takes a few seconds; after that only new days are fetched."));
         verdict.set(c);
         if (symField != null) { typing = false; symField.setText(sym); typing = true; }
     }

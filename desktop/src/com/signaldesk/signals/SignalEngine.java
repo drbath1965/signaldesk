@@ -96,7 +96,8 @@ public final class SignalEngine {
             if (s != null) { signals.add(s); pending = s; }
         }
         if (inPos) { openEntry = entry; trades.add(new Trade(entry.entryI(), entry.entryPx(), entry.why(), null, c[n - 1], "Still open", c[n - 1] / entry.entryPx() * (1 - fee) - 1, true)); }
-        double years = (n - start) / 252.0;
+        // Calendar time, not a day count: crypto trades every day, stocks about 252 days a year.
+        double years = Math.max(1 / 365.25, java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.parse(data.dates().get(start)), java.time.LocalDate.parse(data.dates().get(n - 1))) / 365.25);
         List<Trade> closed = trades.stream().filter(t -> !t.open()).toList();
         stats = new Stats(eq[n - 1] - 1, bh[n - 1] - 1, Math.pow(eq[n - 1], 1 / years) - 1, Math.pow(bh[n - 1], 1 / years) - 1,
             drawdown(eq), drawdown(bh), closed.size(),
