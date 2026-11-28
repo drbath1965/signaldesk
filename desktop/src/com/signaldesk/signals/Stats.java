@@ -14,6 +14,9 @@ public final class Stats {
     public final double avgVol;
     /** Sensitivity to the S&P 500 over the last year (1.0 moves with it); NaN when the benchmark isn't available. */
     public final double beta;
+    /** Dividends paid over the past year, as a fraction of today's price (0 when it pays none). */
+    public final double divYield;
+    public final Dividends.Summary div;
 
     private Stats(PriceSeries s, PriceSeries bench, AssetType type) {
         double[] c = s.close(); int n = c.length; int L = n - 1;
@@ -35,6 +38,7 @@ public final class Stats {
         if (s.hasVolume()) for (int i = m3; i <= L; i++) { vs += s.vol(i); vk++; }
         avgVol = vk > 0 && vs > 0 ? vs / vk : Double.NaN;
         beta = bench == null ? Double.NaN : beta(s, bench, end.minusYears(1));
+        div = Dividends.summary(s); divYield = div.yield();
     }
     public static Stats of(PriceSeries s, PriceSeries benchmark, AssetType type) { return new Stats(s, benchmark, type); }
 

@@ -328,6 +328,11 @@ public final class ResearchView extends View {
         statRow(g, "Max drawdown, 1 year", "dd", Kit.pct(st.dd1y, 0, 13f));
         g.row(null, Ui.text("   All time", Theme.body(13f), t.muted), Kit.pct(st.ddAll, 0, 13f));
         statRow(g, "Beta vs S&P 500", "beta", Ui.mono(Double.isNaN(st.beta) ? "—" : Fmt.num(st.beta, 2), 13f, t.ink));
+        statRow(g, "Dividend yield, 12 months", "yield", Ui.mono(st.div.pays() ? Fmt.pctu(st.divYield, 2) : "None", 13f, st.div.pays() ? t.ink : t.muted));
+        if (st.div.pays()) {
+            g.row(null, Ui.text("   Paid per share", Theme.body(13f), t.muted), Ui.mono(Fmt.money2(st.div.ttm()) + " (" + st.div.count() + (st.div.count() == 1 ? " payment)" : " payments)"), 13f, t.ink));
+            if (!Double.isNaN(st.div.growth())) g.row(null, Ui.text("   Against the year before", Theme.body(13f), t.muted), Kit.pct(st.div.growth(), 0, 13f));
+        }
         statRow(g, "Average daily volume", "avgvol", Ui.mono(Double.isNaN(st.avgVol) ? "—" : PriceChart.Fmt2.compactCount(st.avgVol), 13f, t.ink));
         k.add(g);
         return Ui.rail(Ui.top(left), Ui.top(k), 340);

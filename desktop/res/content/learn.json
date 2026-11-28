@@ -495,6 +495,78 @@
    ]
   },
   {
+   "id": "dividends",
+   "level": "Returns & risk",
+   "title": "Dividends and dividend investing",
+   "minutes": 5,
+   "summary": "Many companies pay part of their profits to shareholders in cash. Dividends can provide steady income, but a high yield isn't free money.",
+   "sections": [
+    {
+     "h": "How dividends work",
+     "p": "A company's board decides how much of its profit to pay out, usually every quarter. To receive a payment you must own the shares before the ex-dividend date. On that date the share price typically drops by about the amount of the payment, because the cash is leaving the company."
+    },
+    {
+     "h": "Dividend yield",
+     "p": "Yield is the past year's dividends divided by today's price. A $100 stock that paid $3 over the past year yields 3%. The S&P 500 as a whole has yielded somewhere around 1–2% in recent years; utilities, consumer staples and energy companies often yield more, and many fast-growing technology companies pay little or nothing."
+    },
+    {
+     "h": "Why a high yield can be a warning",
+     "p": "Yield rises when the price falls. A 9% yield often means investors expect the dividend to be cut, or the business is in trouble. Steady, growing payments from a profitable company usually matter more than the biggest number. Signal Desk shows whether the past year's total is up or down on the year before."
+    },
+    {
+     "h": "Dividend funds",
+     "p": "ETFs such as SCHD, VYM and VIG hold dozens or hundreds of dividend payers, so one cut doesn't do much damage. Some focus on high current yield; others on companies that have raised payments for many years."
+    },
+    {
+     "h": "Total return still rules",
+     "p": "A dividend is part of your return, not extra on top of it. A stock that yields 4% but falls 10% has lost you money. Compare dividend payers on total return, which Signal Desk's adjusted prices already include, and remember that in taxable accounts dividends are usually taxed in the year you receive them."
+    }
+   ],
+   "takeaways": [
+    "Yield = past year's dividends ÷ today's price.",
+    "A very high yield can signal an expected cut.",
+    "Dividends are part of total return, not extra."
+   ],
+   "quiz": [
+    {
+     "q": "A $50 stock paid $2 in dividends over the past year. Its yield is:",
+     "options": [
+      "2%",
+      "4%",
+      "25%"
+     ],
+     "answer": 1,
+     "why": "$2 ÷ $50 = 4%."
+    },
+    {
+     "q": "A stock's yield jumped from 3% to 8% in six months without the dividend changing. What most likely happened?",
+     "options": [
+      "The company doubled its profits",
+      "The share price fell sharply",
+      "The dividend became tax-free"
+     ],
+     "answer": 1,
+     "why": "Same payment, much lower price, so a higher yield. Ask why the price fell."
+    },
+    {
+     "q": "What happens to the share price on the ex-dividend date, typically?",
+     "options": [
+      "It rises by the dividend amount",
+      "It drops by about the dividend amount",
+      "Nothing; prices ignore dividends"
+     ],
+     "answer": 1,
+     "why": "The cash leaves the company, so the price adjusts down by roughly that amount."
+    }
+   ],
+   "terms": [
+    "Dividend",
+    "Dividend yield",
+    "Ex-dividend date",
+    "Total return"
+   ]
+  },
+  {
    "id": "charts",
    "level": "Reading charts",
    "title": "Reading a price chart",
@@ -942,12 +1014,20 @@
    "def": "Cash a company pays shareholders out of its profits, often every quarter."
   },
   {
+   "term": "Dividend yield",
+   "def": "Dividends paid over the past year divided by today's price. Signal Desk works it out from the price history."
+  },
+  {
    "term": "Drawdown",
    "def": "The fall from a peak to a later low, as a percentage."
   },
   {
    "term": "ETF",
    "def": "Exchange-traded fund: a fund whose shares trade on a stock exchange throughout the day, usually tracking an index."
+  },
+  {
+   "term": "Ex-dividend date",
+   "def": "The first day a stock trades without its next dividend. Buy before it to receive the payment; the price usually drops by about the dividend that day."
   },
   {
    "term": "Expense ratio",
@@ -1225,6 +1305,16 @@
    "title": "Compared with the S&P 500",
    "body": "What the same money would be worth if every deposit had gone into an S&P 500 index on the day your practice portfolio started.",
    "term": "Index"
+  },
+  "yield": {
+   "title": "Dividend yield",
+   "body": "Dividends paid over the past 12 months as a percentage of today's price. Signal Desk works it out from the price history: Yahoo's adjusted prices step at each payout, and the size of the step gives the amount. For mutual funds it includes capital-gain distributions, which can make yields look higher in some years. A very high yield often follows a falling price.",
+   "term": "Dividend yield"
+  },
+  "screen": {
+   "title": "Custom screens",
+   "body": "Your own rules for picking from the lists: minimum score, dividend yield, returns, maximum volatility or drawdown, an uptrend, today's call and kinds of asset. Every rule you fill in must pass. Screens are saved with your data and update as prices change.",
+   "term": "Screening"
   },
   "asset-type": {
    "title": "Asset type",

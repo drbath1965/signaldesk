@@ -6,7 +6,7 @@ KNOWN = {"MSFT": ("Microsoft Corporation", 420.0), "AAPL": ("Apple Inc.", 230.0)
          "VXUS": ("Vanguard Total International Stock Index Fund ETF Shares", 65.0), "BND": ("Vanguard Total Bond Market Index Fund ETF Shares", 72.0), "BRK-B": ("Berkshire Hathaway Inc.", 470.0)}
 LOG = []
 DIV_FLAG = "/tmp/yahoo_mock_dividend"   # when this file exists, past adjusted closes shift (as after a dividend)
-ETFS = {"VTI","VXUS","BND","SPY","VOO","QQQ","IWM","VEA","VWO","AGG","TLT","GLD","VNQ","SCHD","XLK"}
+ETFS = {"SPYD","DVY","HDV","NOBL","DGRO","VIG","VYM","SCHD","VTI","VXUS","BND","SPY","VOO","QQQ","IWM","VEA","VWO","AGG","TLT","GLD","VNQ","SCHD","XLK"}
 def kind(sym):
     if sym.startswith("^"): return "INDEX"
     if sym.endswith("-USD"): return "CRYPTOCURRENCY"
@@ -40,12 +40,31 @@ def series(sym):
     f = px / rows[-1][4]
     rows = [[r[0], round(r[1] * f, 4), round(r[2] * f, 4), round(r[3] * f, 4), round(r[4] * f, 4), r[5]] for r in rows]
     return name, rows
+# yearly dividend yield of symbols that pay one (quarterly; bond funds monthly)
+DIVS = {"KO": .03, "PEP": .028, "JNJ": .031, "PG": .024, "XOM": .034, "CVX": .042, "VZ": .064, "T": .05, "MO": .075, "PM": .04,
+        "ABBV": .035, "PFE": .065, "MRK": .03, "IBM": .03, "MMM": .022, "O": .056, "MCD": .023, "HD": .024, "JPM": .021, "CSCO": .027,
+        "TXN": .028, "KMB": .037, "CL": .022, "DUK": .037, "SO": .033, "NEE": .03, "LMT": .028, "UPS": .05, "CAT": .015, "WMT": .01,
+        "SCHD": .036, "VYM": .028, "DVY": .035, "HDV": .034, "NOBL": .02, "SPYD": .044, "DGRO": .022, "VIG": .017,
+        "AAPL": .0045, "MSFT": .008, "VOO": .012, "SPY": .012, "VTI": .013, "VFIAX": .012, "BND": .037, "AGG": .036}
+def factors(sym, rows):
+    """Adjusted-close factors: each dividend lowers every earlier adjusted close, as Yahoo's adjclose does."""
+    y = DIVS.get(sym, 0); n = len(rows); f = [1.0] * n
+    if not y: return f
+    step = 21 if sym in ("BND", "AGG") else 63; per = 12 if step == 21 else 4
+    cum = 1.0
+    for i in range(n - 1, 0, -1):
+        f[i] = cum
+        if (n - 1 - i) % step == 10:   # ex-dividend day
+            cum *= 1 - (y / per * rows[i - 1][4]) / rows[i - 1][4]
+    f[0] = cum
+    return f
 def chart(sym, q):
     name, rows = series(sym)
-    if "range" in q and q["range"][0] == "1mo": rows = rows[-31:]
+    fs = factors(sym, rows)
+    if "range" in q and q["range"][0] == "1mo": rows = rows[-31:]; fs = fs[-31:]
     div = os.path.exists(DIV_FLAG)
     ts = [r[0] for r in rows]
-    adj = [round(r[4] * (0.97 if div and i < len(rows) - 5 else 1.0) * 0.99, 4) for i, r in enumerate(rows)]
+    adj = [round(r[4] * fs[i] * (0.97 if div and i < len(rows) - 5 else 1.0) * 0.99, 4) for i, r in enumerate(rows)]
     q0 = {"open": [r[1] for r in rows], "high": [r[2] for r in rows], "low": [r[3] for r in rows], "close": [r[4] for r in rows], "volume": [r[5] for r in rows]}
     q0["close"][len(rows) // 2] = None; adj[len(rows) // 2] = None   # a holiday gap, as Yahoo sometimes sends
     return {"chart": {"result": [{"meta": {"currency": "USD", "symbol": sym, "exchangeName": "NMS", "fullExchangeName": "NasdaqGS", "gmtoffset": -18000,

@@ -16,6 +16,8 @@ public final class Studio {
     public final Map<String, Double> lessons = new LinkedHashMap<>();
     public SignalParams sig = new SignalParams();
     public final List<BacklogItem> backlog = new ArrayList<>();
+    /** Custom screens built on the Picks page. */
+    public final List<Screen> screens = new ArrayList<>();
     public String theme = "light";
     /** True when loaded from a version 1 file that still held budget, bills and other removed sections. */
     public transient boolean fromV1;
@@ -30,6 +32,7 @@ public final class Studio {
         for (Map.Entry<String, Object> e : Json.obj(m, "lessons").entrySet()) if (e.getValue() instanceof Number n) s.lessons.put(e.getKey(), n.doubleValue());
         s.sig = SignalParams.from(Json.obj(Json.obj(m, "sig"), "P"));
         for (Object o : Json.arr(m, "backlog")) s.backlog.add(BacklogItem.from(Json.obj(o)));
+        for (Object o : Json.arr(m, "screens")) s.screens.add(Screen.from(Json.obj(o)));
         s.theme = "dark".equals(Json.str(Json.obj(m, "ui"), "theme", "light")) ? "dark" : "light";
         // Version 1 kept a household budget. Carry its investment symbols into the watchlist.
         if (m.containsKey("budget") || m.containsKey("bills")) {
@@ -51,6 +54,7 @@ public final class Studio {
         m.put("lessons", new LinkedHashMap<>(lessons));
         Map<String, Object> sg = new LinkedHashMap<>(); sg.put("P", sig.toJson()); m.put("sig", sg);
         List<Object> b = new ArrayList<>(); for (BacklogItem x : backlog) b.add(x.toJson()); m.put("backlog", b);
+        List<Object> sc = new ArrayList<>(); for (Screen x : screens) sc.add(x.toJson()); m.put("screens", sc);
         Map<String, Object> ui = new LinkedHashMap<>(); ui.put("theme", theme); m.put("ui", ui);
         return m;
     }

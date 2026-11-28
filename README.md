@@ -10,9 +10,10 @@ Version 2.0 of the desktop app is about investing and learning only. The househo
 
 - **Markets** (home): S&P 500, Nasdaq, Dow, Russell 2000 and Bitcoin; your watchlist with price, day, 1-month and 1-year change, score and today's call; the highest-scoring symbols you've looked at; and your practice and learning progress.
 - **Research**: line, candlestick or OHLC charts over the full daily history with SMA, EMA 21, SMA 200, Bollinger Bands, volume, RSI and MACD; the Signal Desk score with its four parts and plain-language reasons; key statistics (returns from 1 month to 5 years, 52-week range, volatility, drawdown, beta against the S&P 500, average volume); and the buy/sell rules backtested over five years against buy-and-hold.
-- **Picks**: rank 30 large US stocks, 15 ETFs, 12 mutual funds, 10 cryptocurrencies or your watchlist by score, with the main reason for each.
+- **Picks**: rank 30 large US stocks, 15 ETFs, 12 mutual funds, 38 dividend payers (30 companies and 8 dividend ETFs), 10 cryptocurrencies or your watchlist. Sort by score, dividend yield, 1-year or 3-month return, volatility or drawdown.
+- **My screens** (on Picks): build and save your own screens. Choose which lists and extra tickers to look in, which kinds to keep (stock, ETF, mutual fund, crypto), and any rules: minimum score, dividend yield, 1-year and 3-month return, maximum volatility and 1-year drop, price above its 200-day average, today's call. Starts from blank or from a template (Dividend income, Strong uptrends, Calm and steady funds), and shows how many symbols pass as you type.
 - **Practice**: a paper-trading portfolio that starts with $100,000 of pretend money. Buy and sell in dollars or shares (fractions allowed) at the latest close, and compare your results with the S&P 500 over the same period.
-- **Learn**: 12 lessons from "what you own when you buy a stock" to "backtests and their limits", each with a three-question quiz, plus a searchable glossary of 57 terms. Every statistic, score part and chart control has a **?** button that explains it and links to the glossary.
+- **Learn**: 13 lessons from "what you own when you buy a stock" to "backtests and their limits", each with a three-question quiz, plus a searchable glossary of 59 terms. Every statistic, score part and chart control has a **?** button that explains it and links to the glossary.
 - **Backlog**: the project's own to-do board.
 
 ### How the score works
@@ -33,13 +34,20 @@ Each symbol is scored from its price history alone, so stocks, funds and crypto 
 |---|---|---|
 | ![Picks](docs/picks.png) | ![Practice](docs/practice.png) | ![Learn](docs/learn.png) |
 
+| A custom screen | The screen editor |
+|---|---|
+| ![Custom screen](docs/picks-screen.png) | ![Screen editor](docs/screen-editor.png) |
+
+### Dividends
+Dividend yield is worked out from the price history: Yahoo's adjusted close steps up on each ex-dividend day, and the size of the step gives the payout. Yield is the past 12 months' payouts divided by today's price, and Research also shows the amount paid and how it compares with the year before. For mutual funds the figure includes capital-gain distributions.
+
 ## Desktop app
 
 ### Run
-Double-click `SignalDesk-2.0.0.jar` (the number is the version), or:
+Double-click `SignalDesk-2.1.0.jar` (the number is the version), or:
 
 ```sh
-java -jar SignalDesk-2.0.0.jar
+java -jar SignalDesk-2.1.0.jar
 ```
 
 Requires Java 17 or newer. There are no other dependencies. Opening a version 1 data file keeps a copy as `backups/studio-v1-<date>.json` and turns its investment symbols into your watchlist.

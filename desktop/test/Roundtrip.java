@@ -21,14 +21,15 @@ public class Roundtrip {
       f[0].learn("lesson:risk"); f[0].learn("term:beta"); f[0].trade("AAPL");
       s.practice.started = "2026-11-20"; s.practice.trades.add(new Practice.Trade("2026-11-20", "AAPL", true, 10, 230));
       s.practice.trades.add(new Practice.Trade("2026-11-24", "AAPL", false, 4, 240));
-      s.lessons.put("stocks", 1.0); s.watchlist.add("NVDA"); s.backlog.get(0).status = BacklogItem.Status.DOING;
+      s.lessons.put("stocks", 1.0); s.screens.add(Screen.templates().get(0)); s.watchlist.add("NVDA"); s.backlog.get(0).status = BacklogItem.Status.DOING;
       f[0].changed(); f[0].saveNow();
     });
     Studio back = store.load();
     var pos = back.practice.positions().get("AAPL");
     System.out.println("saved=" + store.exists() + " v=" + com.signaldesk.json.Json.obj(com.signaldesk.json.Json.parse(Files.readString(store.file()))).get("v")
       + " watchlist=" + back.watchlist + " trades=" + back.practice.trades.size() + " AAPL shares=" + pos.shares + " avg=" + pos.avgCost()
-      + " cash=" + back.practice.cash() + " realized=" + back.practice.realized() + " lessonDone=" + back.lessonDone("stocks") + " backlog0=" + back.backlog.get(0).status);
+      + " cash=" + back.practice.cash() + " realized=" + back.practice.realized() + " lessonDone=" + back.lessonDone("stocks") + " backlog0=" + back.backlog.get(0).status
+      + " screen=" + back.screens.get(0).name + " [" + back.screens.get(0).lists + " yield>=" + back.screens.get(0).minYield + " sort=" + back.screens.get(0).sort + "]");
     System.exit(0);
   }
 }
